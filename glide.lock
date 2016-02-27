@@ -1,0 +1,8 @@
+hash: 71fffb940288a5f2448c8643c3331d9cbcbe0fc32f9ea49d5136ba2dfe74df17
+updated: 2016-02-27T03:19:16.050919414-06:00
+imports:
+- name: github.com/boltdb/bolt
+  version: 6fa1249006bd0fb3836b664614fc4bb7c6f74167
+- name: github.com/fatih/color
+  version: 4f7bcef27eec7925456d0c30c5e7b0408b3339be
+devImports: []
