@@ -1,10 +1,12 @@
-package main
+package db
 
 import (
 	"bytes"
 	"fmt"
 
+	"encoding/json"
 	"github.com/boltdb/bolt"
+	"github.com/samdfonseca/flipadelphia/utils"
 )
 
 type FlipadelphiaDB struct {
@@ -12,16 +14,25 @@ type FlipadelphiaDB struct {
 }
 
 type FlipadelphiaFeature struct {
-	Name  string
-	Value string
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type KeyValuePair [][]byte
 
-var FDB FlipadelphiaDB
+var DB FlipadelphiaDB
 
-func (FDB *FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) error {
-	err := FDB.db.Batch(func(tx *bolt.Tx) error {
+func NewFlipadelphiaDB(db bolt.DB) FlipadelphiaDB {
+	err := db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("features"))
+		return err
+	})
+	utils.FailOnError(err, "Unable to create features bucket", true)
+	return FlipadelphiaDB{db: db}
+}
+
+func (fdb *FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) error {
+	err := fdb.db.Batch(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(scope)
 		if err != nil {
 			return err
@@ -35,14 +46,14 @@ func (FDB *FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) error {
 	return err
 }
 
-func (FDB *FlipadelphiaDB) Get(scope []byte, key []byte) (feature FlipadelphiaFeature, err error) {
+func (fdb *FlipadelphiaDB) Get(scope []byte, key []byte) (feature FlipadelphiaFeature, err error) {
 	var value []byte
-	err = FDB.db.View(func(tx *bolt.Tx) error {
+	var resultBuffer bytes.Buffer
+	err = fdb.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(scope)
 		if bucket == nil {
 			return fmt.Errorf("Bucket not found: %q", scope)
 		}
-		var resultBuffer bytes.Buffer
 		resultBuffer.Write(bucket.Get(key))
 		value = resultBuffer.Bytes()
 		return nil
@@ -54,8 +65,8 @@ func (FDB *FlipadelphiaDB) Get(scope []byte, key []byte) (feature FlipadelphiaFe
 	return
 }
 
-func (FDB *FlipadelphiaDB) GetAll(scope []byte) (features []FlipadelphiaFeature, err error) {
-	err = FDB.db.View(func(tx *bolt.Tx) error {
+func (fdb *FlipadelphiaDB) GetAll(scope []byte) (features []FlipadelphiaFeature, err error) {
+	err = fdb.db.View(func(tx *bolt.Tx) error {
 		topLevelBucket := tx.Bucket(scope)
 		if topLevelBucket == nil {
 			return fmt.Errorf("Bucket not found: %q", scope)
@@ -64,7 +75,7 @@ func (FDB *FlipadelphiaDB) GetAll(scope []byte) (features []FlipadelphiaFeature,
 		getAllKeyValPairsFromBucket(*topLevelBucket, keyValPairBuffer)
 		for i := range keyValPairBuffer {
 			features = append(features, FlipadelphiaFeature{
-				Name: string(keyValPairBuffer[i][0]),
+				Name:  string(keyValPairBuffer[i][0]),
 				Value: string(keyValPairBuffer[i][1]),
 			})
 		}
@@ -84,4 +95,18 @@ func getAllKeyValPairsFromBucket(bucket bolt.Bucket, buffer []KeyValuePair) {
 		}
 	}
 	return
+}
+
+func (feature FlipadelphiaFeature) Serialize() []byte {
+	featureMap := map[string]string{
+		"name":  feature.Name,
+		"value": feature.Value,
+		"data":  "true",
+	}
+	serializedFeature, err := json.Marshal(featureMap)
+	if err != nil {
+		utils.LogOnError(err, "Unable to serialize feature", true)
+		return []byte("")
+	}
+	return serializedFeature
 }

@@ -2,3 +2,6 @@ package: .
 import:
 - package: github.com/fatih/color
 - package: github.com/boltdb/bolt
+- package: github.com/codegangsta/cli
+- package: github.com/codegangsta/negroni
+- package: github.com/gorilla/mux

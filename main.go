@@ -1,18 +1,51 @@
 package main
 
 import (
-
+	"fmt"
 	"github.com/boltdb/bolt"
+	"github.com/codegangsta/cli"
+	"github.com/samdfonseca/flipadelphia/config"
+	"github.com/samdfonseca/flipadelphia/db"
+	"github.com/samdfonseca/flipadelphia/server"
+	"github.com/samdfonseca/flipadelphia/utils"
+	"net/http"
+	"os"
 )
 
+var flipadelphiaVersion = "dev-build"
+
 func main() {
-	db, err := bolt.Open(FC.RuntimeEnvironment.DBFile, 0600, nil)
-	failOnError(err, "Unable to open db file", true)
-	defer db.Close()
-	FDB.db = *db
-	err = FDB.Set([]byte("venue-1"), []byte("feature1"), []byte("1"))
-	failOnError(err, "Unable to set feature", true)
-	feature1, err := FDB.Get([]byte("venue-1"), []byte("feature1"))
-	failOnError(err, "Unable to get feature", true)
-	output(feature1.Name + ": " + feature1.Value)
+	app := cli.NewApp()
+	app.Name = "flipadelphia"
+	app.Usage = "flipadelphia flips your features"
+	app.Version = flipadelphiaVersion
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "env, e",
+			Value:  "development",
+			Usage:  "An environment from the config.json file to use",
+			EnvVar: "FLIPADELPHIA_ENV",
+		},
+		cli.StringFlag{
+			Name:   "config",
+			Usage:  "Path to the config file.",
+			Value:  config.GetStoredFilePath("config.json"),
+			EnvVar: "FLIPADELPHIA_CONFIG",
+		},
+	}
+	app.Action = func(c *cli.Context) {
+		config.Config = config.NewFlipadelphiaConfig(c)
+		bdb, err := bolt.Open(config.Config.DBFile, 0600, nil)
+		utils.FailOnError(err, "Unable to open db file", true)
+		defer bdb.Close()
+		db.DB = db.NewFlipadelphiaDB(*bdb)
+		err = db.DB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
+		utils.FailOnError(err, "Unable to set feature", true)
+		feature1, err := db.DB.Get([]byte("venue-1"), []byte("feature1"))
+		utils.FailOnError(err, "Unable to get feature", true)
+		utils.Output(string(feature1.Serialize()))
+		http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(db.DB))
+	}
+
+	app.Run(os.Args)
 }
