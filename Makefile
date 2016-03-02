@@ -12,3 +12,5 @@ doc:
 vet:
 	go vet
 
+dev:
+	go build && ./flipadelphia --env development

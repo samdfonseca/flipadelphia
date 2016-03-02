@@ -5,8 +5,8 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/codegangsta/cli"
 	"github.com/samdfonseca/flipadelphia/config"
-	"github.com/samdfonseca/flipadelphia/db"
 	"github.com/samdfonseca/flipadelphia/server"
+	"github.com/samdfonseca/flipadelphia/store"
 	"github.com/samdfonseca/flipadelphia/utils"
 	"net/http"
 	"os"
@@ -34,17 +34,18 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) {
+		c.Args()
 		config.Config = config.NewFlipadelphiaConfig(c)
-		bdb, err := bolt.Open(config.Config.DBFile, 0600, nil)
+		db, err := bolt.Open(config.Config.DBFile, 0600, nil)
 		utils.FailOnError(err, "Unable to open db file", true)
-		defer bdb.Close()
-		db.DB = db.NewFlipadelphiaDB(*bdb)
-		err = db.DB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
+		defer db.Close()
+		flipDB := store.NewFlipadelphiaDB(*db)
+		feature1, err := flipDB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
 		utils.FailOnError(err, "Unable to set feature", true)
-		feature1, err := db.DB.Get([]byte("venue-1"), []byte("feature1"))
+		feature1, err = flipDB.Get([]byte("venue-1"), []byte("feature1"))
 		utils.FailOnError(err, "Unable to get feature", true)
 		utils.Output(string(feature1.Serialize()))
-		http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(db.DB))
+		http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
 	}
 
 	app.Run(os.Args)

@@ -23,14 +23,27 @@ func Output(s string) {
 	fmt.Printf("%s: %s\n", green(bold("flipadelphia")), s)
 }
 
-func LogOnError(err error, msg string, appendErr bool) {
+func LogOnError(err error, msg string, appendErr ...bool) {
 	if err != nil {
-		if appendErr {
-			logErr(fmt.Errorf("%s: %s", msg, err))
-		} else {
-			logErr(fmt.Errorf("%s", msg))
+		if len(appendErr) > 0 {
+			if appendErr[0] {
+				logErr(fmt.Errorf("%s: %s", msg, err))
+			} else {
+				logErr(fmt.Errorf("%s", msg))
+			}
 		}
 	}
+}
+
+func LogOnSuccess(err error, msg string) {
+	if err == nil {
+		Output(msg)
+	}
+}
+
+func LogEither(err error, successMsg, errorMsg string, appendErr ...bool) {
+	LogOnSuccess(err, fmt.Sprintf("SUCCESS %s", successMsg))
+	LogOnError(err, fmt.Sprintf("FAIL %s", errorMsg), appendErr...)
 }
 
 func FailOnError(err error, msg string, appendErr bool) {
