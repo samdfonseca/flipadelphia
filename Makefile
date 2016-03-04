@@ -20,3 +20,6 @@ dev:
 
 check:
 	go build && ./flipadelphia sanitycheck
+
+install:
+	mv flipadelphia /usr/bin/

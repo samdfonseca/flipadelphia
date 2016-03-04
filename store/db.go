@@ -55,6 +55,7 @@ func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 		Data:  fmt.Sprint(data),
 	}
 }
+
 func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
 	var keys [][]byte
 	err := fdb.db.View(func(tx *bolt.Tx) error {
@@ -73,7 +74,7 @@ func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
 
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
 	err := fdb.db.Batch(func(tx *bolt.Tx) error {
-		bucket, _ := tx.CreateBucketIfNotExists([]byte("features"))
+		bucket := tx.Bucket([]byte("features"))
 		scopeKey := bytes.Join([][]byte{scope, key}, []byte(":"))
 		err := bucket.Put(scopeKey, value)
 		if err != nil {

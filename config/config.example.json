@@ -1,46 +1,47 @@
 {
   "development": {
-    "auth_server": "http://localhost:3005",
-    "redis_host": "localhost",
-    "redis_port": "6379",
-    "redis_protocol": "tcp",
-    "db_file": "flipadelphia.db",
-    "log_file": "flipadelphia.log",
-    "log_file_max_size": "500",
-    "log_file_max_backups": "3",
-    "log_file_max_age": "28"
+    "auth_url": "http://localhost:3005/session",
+    "auth_type": "token",
+    "auth_method": "GET",
+    "auth_success_status_code": "200",
+    "db_file": "flipadelphia_dev.db",
+    "log_file": "flipadelphia_dev.log",
+    "port": "3006"
+  },
+  "local": {
+    "auth_url": "http://localhost:3005/session",
+    "auth_type": "token",
+    "auth_method": "GET",
+    "auth_success_status_code": "200",
+    "db_file": "flipadelphia_local.db",
+    "log_file": "flipadelphia_local.log",
+    "port": "3006"
   },
   "test": {
-    "auth_server": "http://localhost:3005",
-    "redis_host": "localhost",
-    "redis_port": "6379",
-    "redis_protocol": "tcp",
-    "db_file": "flipadelphia.db",
-    "log_file": "flipadelphia.log",
-    "log_file_max_size": "500",
-    "log_file_max_backups": "3",
-    "log_file_max_age": "28"
+    "auth_url": "http://localhost:3005/session",
+    "auth_type": "token",
+    "auth_method": "GET",
+    "auth_success_status_code": "200",
+    "db_file": "flipadelphia_test.db",
+    "log_file": "flipadelphia_test.log",
+    "port": "3006"
   },
   "integration": {
-    "auth_server": "https://auth-integration.bypassmobile.com",
-    "redis_host": "localhost",
-    "redis_port": "6379",
-    "redis_protocol": "tcp",
-    "db_file": "flipadelphia.db",
-    "log_file": "flipadelphia.log",
-    "log_file_max_size": "500",
-    "log_file_max_backups": "3",
-    "log_file_max_age": "28"
+    "auth_url": "http://localhost:3005/session",
+    "auth_type": "token",
+    "auth_method": "GET",
+    "auth_success_status_code": "200",
+    "db_file": "flipadelphia_int.db",
+    "log_file": "flipadelphia_int.log",
+    "port": "3006"
   },
   "production": {
-    "auth_server": "https://auth.bypassmobile.com",
-    "redis_host": "localhost",
-    "redis_port": "6379",
-    "redis_protocol": "tcp",
-    "db_file": "flipadelphia.db",
-    "log_file": "flipadelphia.log",
-    "log_file_max_size": "500",
-    "log_file_max_backups": "3",
-    "log_file_max_age": "28"
+    "auth_url": "http://localhost:3005/session",
+    "auth_type": "token",
+    "auth_method": "GET",
+    "auth_success_status_code": "200",
+    "db_file": "flipadelphia_prod.db",
+    "log_file": "flipadelphia_prod.log",
+    "port": "3006"
   }
 }
