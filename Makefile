@@ -1,10 +1,13 @@
 default: build
 
+deps:
+	glide install
+
 build:
 	go build
-
+	
 run:
-	go build && ./flipadelphia
+	go build && ./flipadelphia serve
 
 doc:
 	godoc -http=:8888 -index
@@ -13,4 +16,7 @@ vet:
 	go vet
 
 dev:
-	go build && ./flipadelphia --env development
+	go build && ./flipadelphia serve --env development
+
+check:
+	go build && ./flipadelphia sanitycheck

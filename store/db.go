@@ -20,7 +20,7 @@ type FlipadelphiaFeature struct {
 }
 
 type FlipadelphiaFeatures struct {
-	Scope	string `json:"scope"`
+	Scope    string `json:"scope"`
 	Features []FlipadelphiaFeature
 }
 
@@ -35,16 +35,24 @@ func createBucketOrFail(db bolt.DB, bucketName []byte) {
 }
 
 func NewFlipadelphiaDB(db bolt.DB) FlipadelphiaDB {
-	createBucketOrFail(db, []byte("features"))
+	err := db.View(func(tx *bolt.Tx) error {
+		if tx.Bucket([]byte("features")) != nil {
+			return nil
+		}
+		return fmt.Errorf("Bucket \"features\" already exists")
+	})
+	if err != nil {
+		createBucketOrFail(db, []byte("features"))
+	}
 	return FlipadelphiaDB{db: db}
 }
 
 func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 	data := string(value) != ""
 	return FlipadelphiaFeature{
-		Name: string(key),
+		Name:  string(key),
 		Value: string(value),
-		Data: fmt.Sprint(data),
+		Data:  fmt.Sprint(data),
 	}
 }
 func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
@@ -65,9 +73,10 @@ func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
 
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
 	err := fdb.db.Batch(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("features"))
+		bucket, _ := tx.CreateBucketIfNotExists([]byte("features"))
 		scopeKey := bytes.Join([][]byte{scope, key}, []byte(":"))
-		if err := bucket.Put(scopeKey, value); err != nil {
+		err := bucket.Put(scopeKey, value)
+		if err != nil {
 			return err
 		}
 		return nil
@@ -93,7 +102,7 @@ func (fdb FlipadelphiaDB) Get(scope []byte, key []byte) (Serializable, error) {
 func (fdb FlipadelphiaDB) GetScopeFeatures(scope []byte) (Serializable, error) {
 	var featureList []FlipadelphiaFeature
 	features := FlipadelphiaFeatures{
-		Scope: string(scope),
+		Scope:    string(scope),
 		Features: featureList,
 	}
 	err := fdb.db.View(func(tx *bolt.Tx) error {

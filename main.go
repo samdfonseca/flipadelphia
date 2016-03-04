@@ -10,6 +10,7 @@ import (
 	"github.com/samdfonseca/flipadelphia/utils"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 var flipadelphiaVersion = "dev-build"
@@ -19,33 +20,55 @@ func main() {
 	app.Name = "flipadelphia"
 	app.Usage = "flipadelphia flips your features"
 	app.Version = flipadelphiaVersion
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "env, e",
-			Value:  "development",
-			Usage:  "An environment from the config.json file to use",
-			EnvVar: "FLIPADELPHIA_ENV",
+	app.Commands = []cli.Command{
+		{
+			Name:    "sanitycheck",
+			Aliases: []string{"c"},
+			Usage:   "Run a quick sanity check",
+			Action: func(c *cli.Context) {
+				config.Config = config.NewFlipadelphiaConfig("config.json", "test")
+				exec.Command("rm", "-f", config.Config.DBFile).Run()
+				db, err := bolt.Open(config.Config.DBFile, 0600, nil)
+				utils.FailOnError(err, "Unable to open db file", true)
+				defer db.Close()
+				flipDB := store.NewFlipadelphiaDB(*db)
+				feature1, err := flipDB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
+				utils.FailOnError(err, "Unable to set feature", true)
+				feature1, err = flipDB.Get([]byte("venue-1"), []byte("feature1"))
+				utils.FailOnError(err, "Unable to get feature", true)
+				utils.Output(string(feature1.Serialize()))
+				exec.Command("rm", "-f", config.Config.DBFile).Run()
+			},
 		},
-		cli.StringFlag{
-			Name:   "config",
-			Usage:  "Path to the config file.",
-			Value:  config.GetStoredFilePath("config.json"),
-			EnvVar: "FLIPADELPHIA_CONFIG",
+		{
+			Name:    "serve",
+			Aliases: []string{"s"},
+			Usage:   "Start the Flipadelphia server",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "env, e",
+					Value:  "development",
+					Usage:  "An environment from the config.json file to use",
+					EnvVar: "FLIPADELPHIA_ENV",
+				},
+				cli.StringFlag{
+					Name:   "config",
+					Usage:  "Path to the config file.",
+					Value:  "config.json",
+					EnvVar: "FLIPADELPHIA_CONFIG",
+				},
+			},
+			Action: func(c *cli.Context) {
+				config.Config = config.NewFlipadelphiaConfig(c.String("config"), c.String("env"))
+				db, err := bolt.Open(config.Config.DBFile, 0600, nil)
+				utils.FailOnError(err, "Unable to open db file", true)
+				defer db.Close()
+				flipDB := store.NewFlipadelphiaDB(*db)
+				utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
+				err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
+				utils.FailOnError(err, "Something went wrong", true)
+			},
 		},
-	}
-	app.Action = func(c *cli.Context) {
-		c.Args()
-		config.Config = config.NewFlipadelphiaConfig(c)
-		db, err := bolt.Open(config.Config.DBFile, 0600, nil)
-		utils.FailOnError(err, "Unable to open db file", true)
-		defer db.Close()
-		flipDB := store.NewFlipadelphiaDB(*db)
-		feature1, err := flipDB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
-		utils.FailOnError(err, "Unable to set feature", true)
-		feature1, err = flipDB.Get([]byte("venue-1"), []byte("feature1"))
-		utils.FailOnError(err, "Unable to get feature", true)
-		utils.Output(string(feature1.Serialize()))
-		http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
 	}
 
 	app.Run(os.Args)

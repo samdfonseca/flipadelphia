@@ -3,10 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/codegangsta/cli"
 	"github.com/samdfonseca/flipadelphia/utils"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type FlipadelphiaConfig struct {
@@ -39,16 +39,22 @@ func parseConfigFile(rawConfigData []byte) (parsedConfig map[string]Flipadelphia
 	return parsedConfig
 }
 
-func getRuntimeEnv(confileFilePath string, envName string) FlipadelphiaConfig {
-	configData := parseConfigFile(readConfigFile(confileFilePath))
-	runtimeEnv := configData[envName]
+func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
+	if !strings.HasPrefix(configFilePath, "/") || !strings.HasPrefix(configFilePath, "./") {
+		configFilePath = GetStoredFilePath(configFilePath)
+	}
+	configData := parseConfigFile(readConfigFile(configFilePath))
+	runtimeEnv, envExists := configData[envName]
+	if !envExists {
+		utils.FailOnError(fmt.Errorf(""), fmt.Sprintf("Runtime environment %q not found in %q", envName, configFilePath), false)
+	}
 	runtimeEnv.EnvironmentName = envName
-	if string(runtimeEnv.DBFile[0]) != "/" {
+	if !strings.HasPrefix(runtimeEnv.DBFile, "/") || !strings.HasPrefix(runtimeEnv.DBFile, "./") {
 		runtimeEnv.DBFile = GetStoredFilePath(runtimeEnv.DBFile)
 	}
 	return runtimeEnv
 }
 
-func NewFlipadelphiaConfig(c *cli.Context) FlipadelphiaConfig {
-	return getRuntimeEnv(c.String("config"), c.String("env"))
+func NewFlipadelphiaConfig(configFilePath, envName string) FlipadelphiaConfig {
+	return getRuntimeEnv(configFilePath, envName)
 }
