@@ -3,10 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/samdfonseca/flipadelphia/utils"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
+
+	"github.com/samdfonseca/flipadelphia/utils"
 )
 
 type FlipadelphiaConfig struct {
@@ -21,13 +23,25 @@ type FlipadelphiaConfig struct {
 
 var Config FlipadelphiaConfig
 
-func GetStoredFilePath(fileName string) string {
+func getStoredFilePath(fileName string) string {
 	homeDir := os.Getenv("HOME")
 	if homeDir == "" {
 		err := fmt.Errorf("")
 		utils.FailOnError(err, "$HOME not set", false)
 	}
 	return fmt.Sprintf("%s/.flipadelphia/%s", homeDir, fileName)
+}
+
+func getFullFilePath(filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+	if strings.HasPrefix(filePath, "./") {
+		cwd, _ := os.Getwd()
+		fullFilePath := fmt.Sprintf("%s/%s", path.Clean(cwd), path.Clean(filePath))
+		return fullFilePath
+	}
+	return getStoredFilePath(filePath)
 }
 
 func readConfigFile(configFilePath string) []byte {
@@ -43,18 +57,15 @@ func parseConfigFile(rawConfigData []byte) (parsedConfig map[string]Flipadelphia
 }
 
 func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
-	if !strings.HasPrefix(configFilePath, "/") && !strings.HasPrefix(configFilePath, "./") {
-		configFilePath = GetStoredFilePath(configFilePath)
-	}
-	configData := parseConfigFile(readConfigFile(configFilePath))
+	fullConfigFilePath := getFullFilePath(configFilePath)
+	configData := parseConfigFile(readConfigFile(fullConfigFilePath))
 	runtimeEnv, envExists := configData[envName]
 	if !envExists {
-		utils.FailOnError(fmt.Errorf(""), fmt.Sprintf("Runtime environment %q not found in %q", envName, configFilePath), false)
+		utils.FailOnError(fmt.Errorf(""),
+			fmt.Sprintf("Runtime environment %q not found in %q", envName, configFilePath), false)
 	}
 	runtimeEnv.EnvironmentName = envName
-	if !strings.HasPrefix(runtimeEnv.DBFile, "/") && !strings.HasPrefix(runtimeEnv.DBFile, "./") {
-		runtimeEnv.DBFile = GetStoredFilePath(runtimeEnv.DBFile)
-	}
+	runtimeEnv.DBFile = getFullFilePath(runtime.DBFile)
 	return runtimeEnv
 }
 
