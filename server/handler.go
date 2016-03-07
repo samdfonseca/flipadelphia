@@ -16,7 +16,10 @@ func App(db store.PersistenceStore, auth Authenticator) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", homeHandler)
-	router.HandleFunc("/features", checkScopeHandler(db)).
+	router.HandleFunc("/features", checkScopeFeaturesForValueHandler(db)).
+		Methods("GET").
+		Queries("scope", "{scope:[0-9A-Za-z_-]*}", "value", "{value:[0-9A-Za-z_-]*}")
+	router.HandleFunc("/features", checkAllScopeFeaturesHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]*}")
 	router.HandleFunc("/features/{feature_name}", checkFeatureHandler(db)).
@@ -49,11 +52,26 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
-func checkScopeHandler(db store.PersistenceStore) http.HandlerFunc {
+func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scope := r.FormValue("scope")
 		defer r.Body.Close()
 		features, err := db.GetScopeFeatures([]byte(scope))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(features.Serialize())
+		}
+	})
+}
+
+func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		scope := r.FormValue("scope")
+		value := r.FormValue("value")
+		defer r.Body.Close()
+		features, err := db.GetScopeFeaturesFilterByValue([]byte(scope), []byte(value))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

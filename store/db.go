@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"encoding/json"
+
 	"github.com/boltdb/bolt"
 	"github.com/samdfonseca/flipadelphia/utils"
 )
@@ -21,14 +22,14 @@ type FlipadelphiaFeature struct {
 
 type FlipadelphiaScopeFeatures []string
 
-func createBucketOrFail(db bolt.DB, bucketName []byte) {
+func createBucket(db bolt.DB, bucketName []byte) error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(bucketName)
 		return err
 	})
 	createLog := fmt.Sprintf("CREATE BUCKET - Name: %q", bucketName)
 	utils.LogEither(err, fmt.Sprint(createLog), fmt.Sprint(createLog), true)
-	utils.FailOnError(err, "EXITING - Unable to create required bucket", false)
+	return err
 }
 
 func NewFlipadelphiaDB(db bolt.DB) FlipadelphiaDB {
@@ -39,7 +40,9 @@ func NewFlipadelphiaDB(db bolt.DB) FlipadelphiaDB {
 		return fmt.Errorf("Bucket \"features\" already exists")
 	})
 	if err != nil {
-		createBucketOrFail(db, []byte("features"))
+		if err := createBucket(db, []byte("features")); err != nil {
+			utils.FailOnError(err, "EXITING - Unable to create required bucket", false)
+		}
 	}
 	return FlipadelphiaDB{db: db}
 }
@@ -53,13 +56,13 @@ func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 	}
 }
 
-func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
-	var keys [][]byte
+func (fdb FlipadelphiaDB) getScopeKeyValues(scope []byte) (map[string][]byte, error) {
+	keys := make(map[string][]byte)
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		cursor := tx.Bucket([]byte("features")).Cursor()
-		for key, _ := cursor.Seek(scope); bytes.HasPrefix(key, scope); key, _ = cursor.Next() {
+		for key, val := cursor.Seek(scope); bytes.HasPrefix(key, scope); key, val = cursor.Next() {
 			splits := bytes.SplitN(key, []byte(":"), 2)
-			keys = append(keys, splits[1])
+			keys[string(splits[1])] = val
 		}
 		return nil
 	})
@@ -67,6 +70,19 @@ func (fdb FlipadelphiaDB) getScopeKeys(scope []byte) ([][]byte, error) {
 		return nil, err
 	}
 	return keys, nil
+}
+
+func (fdb FlipadelphiaDB) getScopeKeyValuesWithCertainValue(scope []byte, targetValue []byte) (map[string][]byte, error) {
+	keys, err := fdb.getScopeKeyValues(scope)
+	if err != nil {
+		return keys, err
+	}
+	for key, val := range keys {
+		if !bytes.Equal(targetValue, val) {
+			delete(keys, key)
+		}
+	}
+	return keys, err
 }
 
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
@@ -92,54 +108,31 @@ func (fdb FlipadelphiaDB) Get(scope []byte, key []byte) (Serializable, error) {
 		value = resultBuffer.Bytes()
 		return nil
 	})
-	// setLog := fmt.Sprintf("GET - Feature: %q, Scope: %q, Value: %q", key, scope, value)
-	// utils.LogEither(err, fmt.Sprintf("SUCCESS %s", setLog), fmt.Sprintf("FAIL %s", setLog), true)
 	return NewFlipadelphiaFeature(key, value), err
 }
 
 func (fdb FlipadelphiaDB) GetScopeFeatures(scope []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
-	err := fdb.db.View(func(tx *bolt.Tx) error {
-		scopeKeys, err := fdb.getScopeKeys(scope)
-		if err != nil {
-			return err
-		}
-		for _, key := range scopeKeys {
-			utils.Output(string(key))
-			featureList = append(featureList, string(key))
-		}
-		return nil
-	})
+	scopeKeys, err := fdb.getScopeKeyValues(scope)
+	if err != nil {
+		return featureList, err
+	}
+	for key, _ := range scopeKeys {
+		featureList = append(featureList, key)
+	}
 	return featureList, err
 }
 
-func (fdb FlipadelphiaDB) addToFeaturesBucket(scope []byte, key []byte, value []byte) (err error) {
-	err = fdb.db.Batch(func(tx *bolt.Tx) error {
-		featureBucket, err := tx.Bucket([]byte("features")).CreateBucketIfNotExists(key)
-		if err != nil {
-			return err
-		}
-		if err = featureBucket.Put(scope, value); err != nil {
-			return err
-		}
-		return nil
-	})
-	utils.LogEither(err,
-		fmt.Sprintf("Added feature %q to features bucket", key),
-		fmt.Sprintf("Unable to add feature %q to features bucket", key),
-		true)
-	return err
-}
-
-func getAllKeyValPairsFromBucket(bucket bolt.Bucket) []KeyValuePair {
-	var keyValuePairs []KeyValuePair
-	bucket.ForEach(func(key, val []byte) error {
-		if val != nil {
-			keyValuePairs = append(keyValuePairs, KeyValuePair{key, val})
-		}
-		return nil
-	})
-	return keyValuePairs
+func (fdb FlipadelphiaDB) GetScopeFeaturesFilterByValue(scope []byte, value []byte) (Serializable, error) {
+	var featureList FlipadelphiaScopeFeatures
+	scopeKeys, err := fdb.getScopeKeyValuesWithCertainValue(scope, value)
+	if err != nil {
+		return featureList, err
+	}
+	for key, _ := range scopeKeys {
+		featureList = append(featureList, key)
+	}
+	return featureList, err
 }
 
 func (feature FlipadelphiaFeature) Serialize() []byte {
@@ -162,12 +155,3 @@ func (features FlipadelphiaScopeFeatures) Serialize() []byte {
 	}
 	return serializedFeatures
 }
-
-//func (features [][]byte) Serialize() []byte {
-//	serializedFeatures, err := json.Marshal(features)
-//	if err != nil {
-//		utils.LogOnError(err, "Unable to serialize features", true)
-//		return []byte("")
-//	}
-//	return serializedFeatures
-//}
