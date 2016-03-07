@@ -11,7 +11,7 @@ import (
 )
 
 type FlipadelphiaDB struct {
-	db bolt.DB
+	db *bolt.DB
 }
 
 type FlipadelphiaFeature struct {
@@ -22,7 +22,7 @@ type FlipadelphiaFeature struct {
 
 type FlipadelphiaScopeFeatures []string
 
-func createBucket(db bolt.DB, bucketName []byte) error {
+func createBucket(db *bolt.DB, bucketName []byte) error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(bucketName)
 		return err
@@ -32,7 +32,7 @@ func createBucket(db bolt.DB, bucketName []byte) error {
 	return err
 }
 
-func NewFlipadelphiaDB(db bolt.DB) FlipadelphiaDB {
+func NewFlipadelphiaDB(db *bolt.DB) FlipadelphiaDB {
 	err := db.View(func(tx *bolt.Tx) error {
 		if tx.Bucket([]byte("features")) != nil {
 			return nil

@@ -32,7 +32,7 @@ func main() {
 				db, err := bolt.Open(config.Config.DBFile, 0600, nil)
 				utils.FailOnError(err, "Unable to open db file", true)
 				defer db.Close()
-				flipDB := store.NewFlipadelphiaDB(*db)
+				flipDB := store.NewFlipadelphiaDB(db)
 				feature1, err := flipDB.Set([]byte("venue-1"), []byte("feature1"), []byte("off"))
 				utils.FailOnError(err, "Unable to set feature", true)
 				feature1, err = flipDB.Get([]byte("venue-1"), []byte("feature1"))
@@ -64,7 +64,7 @@ func main() {
 				db, err := bolt.Open(config.Config.DBFile, 0600, nil)
 				utils.FailOnError(err, "Unable to open db file", true)
 				defer db.Close()
-				flipDB := store.NewFlipadelphiaDB(*db)
+				flipDB := store.NewFlipadelphiaDB(db)
 				utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
 				auth := server.NewAuthSettings(config.Config.AuthRequestURL,
 					config.Config.AuthRequestMethod,
