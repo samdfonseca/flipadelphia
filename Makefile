@@ -1,7 +1,7 @@
 default: build
 
 deps:
-	glide install
+	godep save
 
 build:
 	go build
@@ -23,3 +23,6 @@ check:
 
 install:
 	mv flipadelphia /usr/bin/
+
+test:
+	go test -v ./config && go test -v ./store

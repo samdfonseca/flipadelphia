@@ -104,7 +104,7 @@ func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
 	TestDB.Set([]byte("scope1"), []byte("feature6"), []byte("ON"))
 	TestDB.Set([]byte("scope1"), []byte("feature6"), []byte(""))
 	TestDB.Set([]byte("scope2"), []byte("feature6"), []byte("on"))
-	features, _ := TestDB.GetScopeFeaturesWithCertainValue([]byte("scope1"), []byte("on"))
+	features, _ := TestDB.GetScopeFeaturesFilterByValue([]byte("scope1"), []byte("on"))
 	actual := sortFeatures(features)
 	target := `["feature1","feature2","feature4"]`
 	checkResult(string(actual.Serialize()), target, t)
