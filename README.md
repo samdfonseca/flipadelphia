@@ -38,21 +38,35 @@ VERSION:
    dev-build
 
 COMMANDS:
-   help, h	Shows a list of commands or help for one command
+   sanitycheck, c       Run a quick sanity check (DEV PURPOSES ONLY)
+   serve, s             Start the Flipadelphia server
+   help, h              Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --env, -e "development"					                An environment from the config.json file to use [$FLIPADELPHIA_ENV]
-   --config "/Users/samfonseca/.flipadelphia/config.json"	Path to the config file. [$FLIPADELPHIA_CONFIG]
-   --help, -h							                    show help
-   --version, -v						                    print the version
+   --help, -h           show help
+   --version, -v        print the version
+
+
+$ ./flipadelphia serve -h
+NAME:
+   flipadelphia serve - Start the Flipadelphia server
+
+USAGE:
+   flipadelphia serve [command options] [arguments...]
+
+OPTIONS:
+   --env, -e "development"      An environment from the config.json file to use [$FLIPADELPHIA_ENV]
+   --config "config.json"       Path to the config file. [$FLIPADELPHIA_CONFIG]
 ```
 
 ## Usage
 
 ### Setting a feature
 
+Auth settings are defined in the config.json file for the runtime environment
+
 ```sh
-$ curl -s -H "X-SESSION-TOKEN:abc123" localhost:3006/features/feature1?scope=user-1 | jq .
+$ curl -s -H "X-SESSION-TOKEN:abc123" -d '{"scope":"user-1","value":"on"}' -X POST localhost:3006/features/feature1 | jq .
 {
   "name": "feature1",
   "value": "on",
@@ -63,6 +77,7 @@ $ curl -s -H "X-SESSION-TOKEN:abc123" localhost:3006/features/feature1?scope=use
 ### Checking a feature
 
 If the feature has been set on the scope, ```data``` is ```true```.
+
 ```sh
 $ curl -s localhost:3006/features/feature1?scope=user-1 | jq .
 {
@@ -73,13 +88,42 @@ $ curl -s localhost:3006/features/feature1?scope=user-1 | jq .
 ```
 
 If the feature has never been set on the scope, ```data``` is ```false```.
+
 ```sh
-$ curl -s localhost:3006/features/unset_feature/?scope=user-1 | jq .
+$ curl -s localhost:3006/features/unset_feature?scope=user-1 | jq .
 {
   "name": "unset_feature",
   "value": "",
   "data": "false"
 }
+```
+
+### Checking a scope
+
+Get all features set on a scope
+
+```sh
+$ curl -s localhost:3006/features?scope=user-1 | jq .
+[
+  "feature1"
+]
+```
+
+Get features set on a scope matching some value
+
+```sh
+$ curl -s localhost:3006/features?scope=user-1\&value=off | jq .
+[]
+$ curl -s -d '{"scope":"user-1","value":"1"}' -X POST localhost:3006/features/feature2 | jq .
+{
+  "name": "feature2",
+  "value": "1",
+  "data": "true"
+}
+$ curl -s localhost:3006/features?scope=user-1\&value=1 | jq .
+[
+  "feature2"
+]
 ```
 
 ## Performance
@@ -142,4 +186,60 @@ Percentage of the requests served within a certain time (ms)
 98%      6
 99%      8
 100%    155 (longest request)
+
+
+$ ab -n 10000 -c 20 localhost:3006/features?scope=user-1\&value=on
+This is ApacheBench, Version 2.3 <$Revision: 1663405 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:
+Server Hostname:        localhost
+Server Port:            3006
+
+Document Path:          /features?scope=user-1&value=on
+Document Length:        34 bytes
+
+Concurrency Level:      20
+Time taken for tests:   1.538 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1510000 bytes
+HTML transferred:       340000 bytes
+Requests per second:    6501.95 [#/sec] (mean)
+Time per request:       3.076 [ms] (mean)
+Time per request:       0.154 [ms] (mean, across all concurrent requests)
+Transfer rate:          958.78 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   3.3      1     112
+Processing:     1    2   3.7      1     112
+Waiting:        1    2   3.7      1     112
+Total:          1    3   5.0      3     114
+
+Percentage of the requests served within a certain time (ms)
+  50%      3
+  66%      3
+  75%      3
+  80%      3
+  90%      3
+  95%      4
+  98%      4
+  99%      4
+ 100%    114 (longest request)
 ```

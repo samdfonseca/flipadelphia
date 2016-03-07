@@ -25,7 +25,7 @@ func main() {
 		{
 			Name:    "sanitycheck",
 			Aliases: []string{"c"},
-			Usage:   "Run a quick sanity check",
+			Usage:   "Run a quick sanity check (DEV PURPOSES ONLY)",
 			Action: func(c *cli.Context) {
 				config.Config = config.NewFlipadelphiaConfig("config.json", "test")
 				exec.Command("rm", "-f", config.Config.DBFile).Run()
