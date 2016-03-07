@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"os/exec"
+
 	"github.com/boltdb/bolt"
 	"github.com/codegangsta/cli"
 	"github.com/samdfonseca/flipadelphia/config"
 	"github.com/samdfonseca/flipadelphia/server"
 	"github.com/samdfonseca/flipadelphia/store"
 	"github.com/samdfonseca/flipadelphia/utils"
-	"net/http"
-	"os"
-	"os/exec"
 )
 
 var flipadelphiaVersion = "dev-build"
@@ -65,7 +66,11 @@ func main() {
 				defer db.Close()
 				flipDB := store.NewFlipadelphiaDB(*db)
 				utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
-				err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
+				auth := server.NewAuthSettings(config.Config.AuthRequestURL,
+					config.Config.AuthRequestMethod,
+					config.Config.AuthRequestHeader,
+					config.Config.AuthRequestSuccessStatusCode)
+				err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB, auth))
 				utils.FailOnError(err, "Something went wrong", true)
 			},
 		},

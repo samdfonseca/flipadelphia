@@ -2,15 +2,17 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/samdfonseca/flipadelphia/store"
+	"github.com/samdfonseca/flipadelphia/utils"
 )
 
-func App(db store.PersistenceStore) http.Handler {
+func App(db store.PersistenceStore, auth Authenticator) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", homeHandler)
@@ -20,7 +22,7 @@ func App(db store.PersistenceStore) http.Handler {
 	router.HandleFunc("/features/{feature_name}", checkFeatureHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]*}")
-	router.HandleFunc("/features/{feature_name}", setFeatureHandler(db)).
+	router.HandleFunc("/features/{feature_name}", setFeatureHandler(db, auth)).
 		Methods("PUT", "POST")
 	n := negroni.Classic()
 	n.UseHandler(router)
@@ -35,6 +37,7 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		scope := r.FormValue("scope")
+		utils.Output(fmt.Sprintf("Scope: %q", scope))
 		feature_name := vars["feature_name"]
 		feature, err := db.Get([]byte(scope), []byte(feature_name))
 		if err != nil {
@@ -49,8 +52,8 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 func checkScopeHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scope := r.FormValue("scope")
-		features, err := db.GetScopeFeatures([]byte(scope))
 		defer r.Body.Close()
+		features, err := db.GetScopeFeatures([]byte(scope))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -60,8 +63,16 @@ func checkScopeHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
-func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
+func setFeatureHandler(db store.PersistenceStore, auth Authenticator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isAuthed, err := auth.AuthenticateRequest(r); err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(err.Error()))
+			return
+		} else if !isAuthed {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		vars := mux.Vars(r)
 		feature_name := []byte(vars["feature_name"])
 		defer r.Body.Close()
