@@ -1,9 +1,10 @@
 package store
 
 import (
+	"testing"
+
 	"github.com/boltdb/bolt"
 	"github.com/samdfonseca/flipadelphia/config"
-	"testing"
 )
 
 var (
@@ -30,25 +31,44 @@ func (db FlipadelphiaDB) GetAndClose(scope, key []byte) Serializable {
 	return feature
 }
 
+func checkResult(actual, target string, t *testing.T) {
+	if actual != target {
+		t.Logf("Target: %s", target)
+		t.Logf("Actual: %s", actual)
+		t.Errorf("Actual value did not match target value")
+	}
+}
+
 func TestSetFeatureSerializes(t *testing.T) {
 	InitTestDB()
 	TestDB.Set([]byte("scope1"), []byte("feature1"), []byte("on"))
 	feature := TestDB.GetAndClose([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"on","data":"true"}`
-	if actual := feature.Serialize(); string(actual) != target {
-		t.Logf("Target: %s", target)
-		t.Logf("Actual: %s", actual)
-		t.Errorf("Feature did not serialize correctly")
-	}
+	checkResult(string(feature.Serialize()), target, t)
 }
 
 func TestUnsetFeatureSerializes(t *testing.T) {
 	InitTestDB()
 	feature := TestDB.GetAndClose([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"","data":"false"}`
-	if actual := feature.Serialize(); string(actual) != target {
-		t.Logf("Target: %s", target)
-		t.Logf("Actual: %s", actual)
-		t.Errorf("Feature did not serialize correctly")
-	}
+	checkResult(string(feature.Serialize()), target, t)
+}
+
+func TestGetScopeFeatures(t *testing.T) {
+	InitTestDB()
+	TestDB.Set([]byte("scope1"), []byte("feature1"), []byte("on"))
+	TestDB.Set([]byte("scope1"), []byte("feature2"), []byte("on"))
+	TestDB.Set([]byte("scope1"), []byte("feature3"), []byte("on"))
+	features, _ := TestDB.GetScopeFeatures([]byte("scope1"))
+	TestDB.db.Close()
+	target := `["feature1","feature2","feature3"]`
+	checkResult(string(features.Serialize()), target, t)
+}
+
+func TestGetEmptyScopeFeatures(t *testing.T) {
+	InitTestDB()
+	features, _ := TestDB.GetScopeFeatures([]byte("scope1"))
+	TestDB.db.Close()
+	target := `[]`
+	checkResult(string(features.Serialize()), target, t)
 }

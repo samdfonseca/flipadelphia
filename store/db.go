@@ -19,10 +19,7 @@ type FlipadelphiaFeature struct {
 	Data  string `json:"data"`
 }
 
-type FlipadelphiaFeatures struct {
-	Scope    string `json:"scope"`
-	Features []FlipadelphiaFeature
-}
+type FlipadelphiaScopeFeatures []string
 
 func createBucketOrFail(db bolt.DB, bucketName []byte) {
 	err := db.Update(func(tx *bolt.Tx) error {
@@ -101,22 +98,19 @@ func (fdb FlipadelphiaDB) Get(scope []byte, key []byte) (Serializable, error) {
 }
 
 func (fdb FlipadelphiaDB) GetScopeFeatures(scope []byte) (Serializable, error) {
-	var featureList []FlipadelphiaFeature
-	features := FlipadelphiaFeatures{
-		Scope:    string(scope),
-		Features: featureList,
-	}
+	var featureList FlipadelphiaScopeFeatures
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		scopeKeys, err := fdb.getScopeKeys(scope)
 		if err != nil {
 			return err
 		}
-		for i := range scopeKeys {
-			featureList = append(featureList, FlipadelphiaFeature{Name: string(scopeKeys[i])})
+		for _, key := range scopeKeys {
+			utils.Output(string(key))
+			featureList = append(featureList, string(key))
 		}
 		return nil
 	})
-	return features, err
+	return featureList, err
 }
 
 func (fdb FlipadelphiaDB) addToFeaturesBucket(scope []byte, key []byte, value []byte) (err error) {
@@ -157,8 +151,11 @@ func (feature FlipadelphiaFeature) Serialize() []byte {
 	return serializedFeature
 }
 
-func (features FlipadelphiaFeatures) Serialize() []byte {
-	serializedFeatures, err := json.Marshal(features.Features)
+func (features FlipadelphiaScopeFeatures) Serialize() []byte {
+	if features == nil {
+		return []byte("[]")
+	}
+	serializedFeatures, err := json.Marshal(features)
 	if err != nil {
 		utils.LogOnError(err, "Unable to serialize features", true)
 		return []byte("")
