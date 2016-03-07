@@ -65,7 +65,7 @@ func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
 			fmt.Sprintf("Runtime environment %q not found in %q", envName, configFilePath), false)
 	}
 	runtimeEnv.EnvironmentName = envName
-	runtimeEnv.DBFile = getFullFilePath(runtime.DBFile)
+	runtimeEnv.DBFile = getFullFilePath(runtimeEnv.DBFile)
 	return runtimeEnv
 }
 
