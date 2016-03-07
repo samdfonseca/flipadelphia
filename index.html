@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Flipadelphia : Flipadelphia flips your features">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Flipadelphia</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/samdfonseca/flipadelphia">View on GitHub</a>
+
+          <h1 id="project_title">Flipadelphia</h1>
+          <h2 id="project_tagline">Flipadelphia flips your features</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/samdfonseca/flipadelphia/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/samdfonseca/flipadelphia/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="flipadelphia" class="anchor" href="#flipadelphia" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Flipadelphia</h1>
+
+<p><em>Flipadelphia flips your features</em></p>
+
+<p><a href="https://travis-ci.org/samdfonseca/flipadelphia"><img src="https://travis-ci.org/samdfonseca/flipadelphia.svg?branch=master" alt="Build Status"></a></p>
+
+<p><img src="http://i.imgur.com/28TTvje.gif" alt="flipadelphia"></p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<ul>
+<li>Flipadelphia uses a config file to keep track of settings for runtime environments. By default, the file is expected
+to be in the ~/.flipadelphia directory. You can also manually set the config with the -c/--config flag. An example
+of the config file is in the config subpackage.</li>
+<li>To handle dependencies, Flipadelphia uses the <a href="https://github.com/tools/godep">godep</a> package manager. Godep
+installs dependencies into the <code>vendor</code> directory within a project, and handles versioning of dependencies.</li>
+</ul>
+
+<div class="highlight highlight-source-shell"><pre>$ mkdir <span class="pl-k">~</span>/.flipadelphia
+$ cp config/config.example.json <span class="pl-k">~</span>/.flipadelphia/config.json
+$ make deps</pre></div>
+
+<h2>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building</h2>
+
+<div class="highlight highlight-source-shell"><pre>$ make build</pre></div>
+
+<h2>
+<a id="running" class="anchor" href="#running" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running</h2>
+
+<div class="highlight highlight-source-shell"><pre>$ ./flipadelphia -h
+NAME:
+   flipadelphia - flipadelphia flips your features
+
+USAGE:
+   flipadelphia [global options] <span class="pl-c1">command</span> [<span class="pl-c1">command</span> options] [arguments...]
+
+VERSION:
+   dev-build
+
+COMMANDS:
+   sanitycheck, c       Run a quick sanity check (DEV PURPOSES ONLY)
+   serve, s             Start the Flipadelphia server
+   <span class="pl-c1">help</span>, h              Shows a list of commands or <span class="pl-c1">help</span> <span class="pl-k">for</span> one <span class="pl-c1">command</span>
+
+GLOBAL OPTIONS:
+   --help, -h           show <span class="pl-c1">help</span>
+   --version, -v        print the version
+
+
+$ ./flipadelphia serve -h
+NAME:
+   flipadelphia serve - Start the Flipadelphia server
+
+USAGE:
+   flipadelphia serve [<span class="pl-c1">command</span> options] [arguments...]
+
+OPTIONS:
+   --env, -e <span class="pl-s"><span class="pl-pds">"</span>development<span class="pl-pds">"</span></span>      An environment from the config.json file to use [<span class="pl-smi">$FLIPADELPHIA_ENV</span>]
+   --config <span class="pl-s"><span class="pl-pds">"</span>config.json<span class="pl-pds">"</span></span>       Path to the config file. [<span class="pl-smi">$FLIPADELPHIA_CONFIG</span>]</pre></div>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a id="setting-a-feature" class="anchor" href="#setting-a-feature" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setting a feature</h3>
+
+<p>Auth settings are defined in the config.json file for the runtime environment</p>
+
+<div class="highlight highlight-source-shell"><pre>$ curl -s -H <span class="pl-s"><span class="pl-pds">"</span>X-SESSION-TOKEN:abc123<span class="pl-pds">"</span></span> -d <span class="pl-s"><span class="pl-pds">'</span>{"scope":"user-1","value":"on"}<span class="pl-pds">'</span></span> -X POST localhost:3006/features/feature1 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+{
+  <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>feature1<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>on<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<h3>
+<a id="checking-a-feature" class="anchor" href="#checking-a-feature" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Checking a feature</h3>
+
+<p>If the feature has been set on the scope, <code>data</code> is <code>true</code>.</p>
+
+<div class="highlight highlight-source-shell"><pre>$ curl -s localhost:3006/features/feature1<span class="pl-k">?</span>scope=user-1 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+{
+  <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>feature1<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>on<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<p>If the feature has never been set on the scope, <code>data</code> is <code>false</code>.</p>
+
+<div class="highlight highlight-source-shell"><pre>$ curl -s localhost:3006/features/unset_feature<span class="pl-k">?</span>scope=user-1 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+{
+  <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>unset_feature<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>false<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<h3>
+<a id="checking-a-scope" class="anchor" href="#checking-a-scope" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Checking a scope</h3>
+
+<p>Get all features set on a scope</p>
+
+<div class="highlight highlight-source-shell"><pre>$ curl -s localhost:3006/features<span class="pl-k">?</span>scope=user-1 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+[
+  <span class="pl-s"><span class="pl-pds">"</span>feature1<span class="pl-pds">"</span></span>
+]</pre></div>
+
+<p>Get features set on a scope matching some value</p>
+
+<div class="highlight highlight-source-shell"><pre>$ curl -s localhost:3006/features<span class="pl-k">?</span>scope=user-1<span class="pl-cce">\&amp;</span>value=off <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+[]
+$ curl -s -d <span class="pl-s"><span class="pl-pds">'</span>{"scope":"user-1","value":"1"}<span class="pl-pds">'</span></span> -X POST localhost:3006/features/feature2 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+{
+  <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>feature2<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>data<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>
+}
+$ curl -s localhost:3006/features<span class="pl-k">?</span>scope=user-1<span class="pl-cce">\&amp;</span>value=1 <span class="pl-k">|</span> jq <span class="pl-c1">.</span>
+[
+  <span class="pl-s"><span class="pl-pds">"</span>feature2<span class="pl-pds">"</span></span>
+]</pre></div>
+
+<h2>
+<a id="performance" class="anchor" href="#performance" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance</h2>
+
+<ul>
+<li>Flipadelphia uses BoltDB as the persistence layer. BoltDB fits the nature of a feature flipping service because it's a read-optimized database and features are typically checked far more often than set.</li>
+<li>To keep the response time as low as possible, all the check endpoints come without authorization. The thinking here is that theres no harm in someone checking a feature. If thats an issue, use a uuid for the feature and scope and keep a mapping of those externally. Authentication will be added to the set endpoint soon.</li>
+</ul>
+
+<div class="highlight highlight-source-shell"><pre>$ ab -n 10000 -c 20 localhost:3006/features/feature1<span class="pl-k">?</span>scope=user-1
+This is ApacheBench, Version 2.3 <span class="pl-k">&lt;</span><span class="pl-smi">$Revision</span>: 1663405 $<span class="pl-k">&gt;</span>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:
+Server Hostname:        localhost
+Server Port:            3006
+
+Document Path:          /features/feature1<span class="pl-k">?</span>scope=user-1
+Document Length:        46 bytes
+
+Concurrency Level:      20
+Time taken <span class="pl-k">for</span> tests:   2.051 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1630000 bytes
+HTML transferred:       460000 bytes
+Requests per second:    4875.25 [#/sec] (mean)
+Time per request:       4.102 [ms] (mean)
+Time per request:       0.205 [ms] (mean, across all concurrent requests)
+Transfer rate:          776.04 [Kbytes/sec] received
+
+Connection Times (ms)
+            min  mean[+/-sd] median   max
+Connect:        0    2   5.7      2     154
+Processing:     0    2   4.6      2     154
+Waiting:        0    2   3.8      2     153
+Total:          1    4   7.3      4     155
+
+Percentage of the requests served within a certain <span class="pl-k">time</span> (ms)
+50%      4
+66%      4
+75%      4
+80%      4
+90%      5
+95%      5
+98%      6
+99%      8
+100%    155 (longest request)
+
+
+$ ab -n 10000 -c 20 localhost:3006/features<span class="pl-k">?</span>scope=user-1<span class="pl-cce">\&amp;</span>value=on
+This is ApacheBench, Version 2.3 <span class="pl-k">&lt;</span><span class="pl-smi">$Revision</span>: 1663405 $<span class="pl-k">&gt;</span>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:
+Server Hostname:        localhost
+Server Port:            3006
+
+Document Path:          /features<span class="pl-k">?</span>scope=user-1<span class="pl-k">&amp;</span>value=on
+Document Length:        34 bytes
+
+Concurrency Level:      20
+Time taken <span class="pl-k">for</span> tests:   1.538 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1510000 bytes
+HTML transferred:       340000 bytes
+Requests per second:    6501.95 [#/sec] (mean)
+Time per request:       3.076 [ms] (mean)
+Time per request:       0.154 [ms] (mean, across all concurrent requests)
+Transfer rate:          958.78 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   3.3      1     112
+Processing:     1    2   3.7      1     112
+Waiting:        1    2   3.7      1     112
+Total:          1    3   5.0      3     114
+
+Percentage of the requests served within a certain <span class="pl-k">time</span> (ms)
+  50%      3
+  66%      3
+  75%      3
+  80%      3
+  90%      3
+  95%      4
+  98%      4
+  99%      4
+ 100%    114 (longest request)</pre></div>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Flipadelphia maintained by <a href="https://github.com/samdfonseca">samdfonseca</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
