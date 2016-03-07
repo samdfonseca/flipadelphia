@@ -25,4 +25,4 @@ install:
 	mv flipadelphia /usr/bin/
 
 test:
-	go test -v ./config && go test -v ./store
+	mkdir $HOME/.flipadelphia && cp config/config.example.json $HOME/.flipadelphia/config.json && go test -v ./config && go test -v ./store
