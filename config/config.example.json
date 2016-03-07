@@ -8,6 +8,11 @@
     "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
+  "noauth": {
+    "db_file": "flipadelphia_dev.db",
+    "log_file": "flipadelphia_dev.log",
+    "port": "3006"
+  },
   "local": {
     "auth_url": "http://localhost:3005/session",
     "auth_header": "X-SESSION-TOKEN",
@@ -22,6 +27,11 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "db_file": "flipadelphia_test.db",
+    "log_file": "flipadelphia_test.log",
+    "port": "3006"
+  },
+  "test_noauth": {
     "db_file": "flipadelphia_test.db",
     "log_file": "flipadelphia_test.log",
     "port": "3006"

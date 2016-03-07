@@ -15,11 +15,18 @@ type AuthSettings struct {
 	SuccessStatusCode string
 }
 
+type NoAuth struct {
+	AuthSettings
+}
+
 type Authenticator interface {
 	AuthenticateRequest(*http.Request) (bool, error)
 }
 
-func NewAuthSettings(url, method, header, successCode string) AuthSettings {
+func NewAuthSettings(url, method, header, successCode string) Authenticator {
+	if strings.EqualFold(url, "") && strings.EqualFold(method, "") && strings.EqualFold(header, "") && strings.EqualFold(successCode, "") {
+		return NoAuth{}
+	}
 	var Method string
 	for _, m := range []string{"GET", "HEAD", "POST", "PUT"} {
 		if strings.ToUpper(method) == m {
@@ -30,6 +37,10 @@ func NewAuthSettings(url, method, header, successCode string) AuthSettings {
 		utils.FailOnError(fmt.Errorf(""), "Invalid request method %q", false)
 	}
 	return AuthSettings{Url: url, Method: Method, Header: header, SuccessStatusCode: successCode}
+}
+
+func (noAuth NoAuth) AuthenticateRequest(r *http.Request) (bool, error) {
+	return true, nil
 }
 
 func (auth AuthSettings) AuthenticateRequest(r *http.Request) (bool, error) {
