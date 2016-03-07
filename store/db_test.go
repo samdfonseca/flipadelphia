@@ -24,7 +24,7 @@ func InitTestDB() {
 		tx.DeleteBucket([]byte("features"))
 		return nil
 	})
-	TestDB = NewFlipadelphiaDB(*testDB)
+	TestDB = NewFlipadelphiaDB(testDB)
 }
 
 func sortFeatures(features Serializable) FlipadelphiaScopeFeatures {
@@ -50,7 +50,7 @@ func TestCreateBucket(t *testing.T) {
 		tx.DeleteBucket([]byte("test"))
 		return nil
 	})
-	err := createBucket(*testDB, []byte("test"))
+	err := createBucket(testDB, []byte("test"))
 	if err != nil {
 		t.Errorf("Error when creating bucket. createBucket returned error != nil")
 	}

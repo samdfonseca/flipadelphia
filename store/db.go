@@ -62,7 +62,9 @@ func (fdb FlipadelphiaDB) getScopeKeyValues(scope []byte) (map[string][]byte, er
 		cursor := tx.Bucket([]byte("features")).Cursor()
 		for key, val := cursor.Seek(scope); bytes.HasPrefix(key, scope); key, val = cursor.Next() {
 			splits := bytes.SplitN(key, []byte(":"), 2)
-			keys[string(splits[1])] = val
+			if bytes.Equal(scope, splits[0]) {
+				keys[string(splits[1])] = val
+			}
 		}
 		return nil
 	})
