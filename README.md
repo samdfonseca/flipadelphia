@@ -2,21 +2,21 @@
 
 *Flipadelphia flips your features*
 
+[![Build Status](https://travis-ci.org/samdfonseca/flipadelphia.svg?branch=master)](https://travis-ci.org/samdfonseca/flipadelphia)
+
 <img src="http://i.imgur.com/28TTvje.gif" alt="flipadelphia"/>
 
 ## Installation
 * Flipadelphia uses a config file to keep track of settings for runtime environments. By default, the file is expected
     to be in the ~/.flipadelphia directory. You can also manually set the config with the -c/--config flag. An example
     of the config file is in the config subpackage.
-* To handle dependencies, Flipadelphia uses the [glide](https://github.com/Masterminds/glide) package manager. Glide
+* To handle dependencies, Flipadelphia uses the [godep](https://github.com/tools/godep) package manager. Godep
     installs dependencies into the ```vendor``` directory within a project, and handles versioning of dependencies.
-    If you don't want to use glide, you can always just manually add the dependencies, but you risk running into a
-    version mismatch since glide locks dependencies down to specific commits.
 
 ```sh
 $ mkdir ~/.flipadelphia
 $ cp config/config.example.json ~/.flipadelphia/config.json
-$ glide install
+$ make deps
 ```
 
 ## Building
