@@ -10,10 +10,13 @@ import (
 )
 
 type FlipadelphiaConfig struct {
-	EnvironmentName string
-	AuthServerURL   string `json:"auth_server"`
-	DBFile          string `json:"db_file"`
-	ListenOnPort    string `json:"port"`
+	EnvironmentName              string
+	AuthRequestURL               string `json:"auth_url"`
+	AuthRequestHeader            string `json:"auth_header"`
+	AuthRequestMethod            string `json:"auth_method"`
+	AuthRequestSuccessStatusCode string `json:"auth_success_status_code"`
+	DBFile                       string `json:"db_file"`
+	ListenOnPort                 string `json:"port"`
 }
 
 var Config FlipadelphiaConfig
@@ -40,7 +43,7 @@ func parseConfigFile(rawConfigData []byte) (parsedConfig map[string]Flipadelphia
 }
 
 func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
-	if !strings.HasPrefix(configFilePath, "/") || !strings.HasPrefix(configFilePath, "./") {
+	if !strings.HasPrefix(configFilePath, "/") && !strings.HasPrefix(configFilePath, "./") {
 		configFilePath = GetStoredFilePath(configFilePath)
 	}
 	configData := parseConfigFile(readConfigFile(configFilePath))
@@ -49,7 +52,7 @@ func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
 		utils.FailOnError(fmt.Errorf(""), fmt.Sprintf("Runtime environment %q not found in %q", envName, configFilePath), false)
 	}
 	runtimeEnv.EnvironmentName = envName
-	if !strings.HasPrefix(runtimeEnv.DBFile, "/") || !strings.HasPrefix(runtimeEnv.DBFile, "./") {
+	if !strings.HasPrefix(runtimeEnv.DBFile, "/") && !strings.HasPrefix(runtimeEnv.DBFile, "./") {
 		runtimeEnv.DBFile = GetStoredFilePath(runtimeEnv.DBFile)
 	}
 	return runtimeEnv

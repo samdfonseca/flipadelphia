@@ -1,7 +1,7 @@
 {
   "development": {
     "auth_url": "http://localhost:3005/session",
-    "auth_type": "token",
+    "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
     "db_file": "flipadelphia_dev.db",
@@ -10,7 +10,7 @@
   },
   "local": {
     "auth_url": "http://localhost:3005/session",
-    "auth_type": "token",
+    "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
     "db_file": "flipadelphia_local.db",
@@ -19,7 +19,7 @@
   },
   "test": {
     "auth_url": "http://localhost:3005/session",
-    "auth_type": "token",
+    "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
     "db_file": "flipadelphia_test.db",
@@ -28,7 +28,7 @@
   },
   "integration": {
     "auth_url": "http://localhost:3005/session",
-    "auth_type": "token",
+    "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
     "db_file": "flipadelphia_int.db",
@@ -37,7 +37,7 @@
   },
   "production": {
     "auth_url": "http://localhost:3005/session",
-    "auth_type": "token",
+    "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
     "db_file": "flipadelphia_prod.db",
