@@ -28,4 +28,4 @@ test:
 	mkdir ~/.flipadelphia && cp config/config.example.json ~/.flipadelphia/config.json && go test -v ./config && go test -v ./store
 
 debug:
-	go build -gcflags "-N -l" -o flipadelphia_gdb && gdp flipadelphia_gdb
+	go build && dlv exec ./flipadelphia s
