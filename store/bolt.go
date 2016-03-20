@@ -11,13 +11,20 @@ import (
 )
 
 type FlipadelphiaDB struct {
-	db *bolt.DB
+	db         *bolt.DB
+	bucketName string "features"
 }
 
 type FlipadelphiaFeature struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 	Data  string `json:"data"`
+}
+
+type pageIndexValue [][]byte
+
+type PagerIndex struct {
+	db *bolt.DB
 }
 
 type FlipadelphiaScopeFeatures []string

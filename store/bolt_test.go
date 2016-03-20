@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"os/exec"
 	"sort"
 	"testing"
 
@@ -16,6 +17,8 @@ var (
 
 func init() {
 	TestConfig = config.NewFlipadelphiaConfig("config.json", "test")
+	_ = exec.Command("touch", TestConfig.DBFile).Run()
+	_ = exec.Command("rm", TestConfig.DBFile).Run()
 }
 
 func InitTestDB() {

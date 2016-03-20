@@ -3,6 +3,11 @@
 	"GoVersion": "go1.6",
 	"Deps": [
 		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.1.0-39-ga4eecd4",
+			"Rev": "a4eecd407cf4129fc902ece859a0114e4cf1a7f4"
+		},
+		{
 			"ImportPath": "github.com/boltdb/bolt",
 			"Comment": "v1.1.0-75-ga5ebf41",
 			"Rev": "a5ebf41fd5bcd729b2ec2107ad35bbc7b67da4c0"
@@ -18,9 +23,17 @@
 			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
 		},
 		{
+			"ImportPath": "github.com/dustin/go-humanize",
+			"Rev": "8929fe90cee4b2cb9deb468b51fb34eba64d1bf0"
+		},
+		{
 			"ImportPath": "github.com/fatih/color",
 			"Comment": "v0.1-12-g9aae6aa",
 			"Rev": "9aae6aaa22315390f03959adca2c4d395b02fcef"
+		},
+		{
+			"ImportPath": "github.com/flynn/go-shlex",
+			"Rev": "3f9db97f856818214da2e1057f8ad84803971cff"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
@@ -31,6 +44,18 @@
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
 		},
 		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "a3ec486e6a7a41858210b0fc5d7b5df593b3c4a3"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-syslog",
+			"Rev": "42a2b573b664dbf281bd48c3cc12c086b17a39ba"
+		},
+		{
+			"ImportPath": "github.com/jimstudt/http-authentication/basic",
+			"Rev": "3eca13d6893afd7ecabe15f4445f5d2872a1b012"
+		},
+		{
 			"ImportPath": "github.com/mattn/go-colorable",
 			"Rev": "4af63d73f5bea08b682ad2cd198b1e607afd6be0"
 		},
@@ -39,8 +64,187 @@
 			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
 		},
 		{
+			"ImportPath": "github.com/mholt/caddy",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/caddy",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/caddy/assets",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/caddy/https",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/caddy/parse",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/caddy/setup",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/basicauth",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/browse",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/errors",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/extensions",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/fastcgi",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/gzip",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/headers",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/inner",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/log",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/markdown",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/mime",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/proxy",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/redirect",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/rewrite",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/templates",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/middleware/websocket",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/mholt/caddy/server",
+			"Comment": "v0.8.2-12-g741d768",
+			"Rev": "741d7685f16211b0056e5b3c47cc806ba7810bd2"
+		},
+		{
+			"ImportPath": "github.com/miekg/dns",
+			"Rev": "b9171237b0642de1d8e8004f16869970e065f46b"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/goamz/aws",
+			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/goamz/route53",
+			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
+		},
+		{
+			"ImportPath": "github.com/russross/blackfriday",
+			"Comment": "v1.3",
+			"Rev": "8cec3a854e68dba10faabbe31c089abf4a3e57a6"
+		},
+		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "244f5ac324cb97e1987ef901a0081a77bfd8e845"
+		},
+		{
+			"ImportPath": "github.com/square/go-jose",
+			"Rev": "7465d2baefd097ef32054b46be7d9c41185869a1"
+		},
+		{
+			"ImportPath": "github.com/square/go-jose/cipher",
+			"Rev": "7465d2baefd097ef32054b46be7d9c41185869a1"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "github.com/weppos/dnsimple-go/dnsimple",
+			"Rev": "65c1ca73cb19baf0f8b2b33219b7f57595a3ccb0"
+		},
+		{
+			"ImportPath": "github.com/xenolf/lego/acme",
+			"Comment": "v0.2.0-117-g39eef1c",
+			"Rev": "39eef1c2f6f8025524aa88746c196ae598aeffc3"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ocsp",
+			"Rev": "803f01ea27e23d998825ec085f0d153cac01c828"
+		},
+		{
+			"ImportPath": "golang.org/x/net/publicsuffix",
+			"Rev": "7c302550d18cede73764b1d19a661d70e29b725d"
+		},
+		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "7a56174f0086b32866ebd746a794417edbc678a1"
+		},
+		{
+			"ImportPath": "gopkg.in/natefinch/lumberjack.v2",
+			"Comment": "v1.0-21-g514cbda",
+			"Rev": "514cbda263a734ae8caac038dadf05f8f3f9f738"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4"
 		}
 	]
 }
