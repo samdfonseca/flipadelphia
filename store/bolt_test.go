@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/samdfonseca/flipadelphia/config"
 )
@@ -45,70 +46,95 @@ func checkResult(actual, target string, t *testing.T) {
 	}
 }
 
-func TestCreateBucket(t *testing.T) {
-	testDB, _ := bolt.Open(TestConfig.DBFile, 0600, nil)
-	defer testDB.Close()
-	// make sure bucket does not already exist
-	testDB.Update(func(tx *bolt.Tx) error {
-		tx.DeleteBucket([]byte("test"))
-		return nil
-	})
-	err := createBucket(testDB, []byte("test"))
-	if err != nil {
-		t.Errorf("Error when creating bucket. createBucket returned error != nil")
-	}
-}
-
 func TestSetFeatureSerializes(t *testing.T) {
-	InitTestDB()
-	defer TestDB.db.Close()
-	TestDB.Set([]byte("scope1"), []byte("feature1"), []byte("on"))
-	feature, _ := TestDB.Get([]byte("scope1"), []byte("feature1"))
+	fdb := MockPersistenceStore{
+		OnGet: func(scope, key []byte) (Serializable, error) {
+			return FlipadelphiaFeature{
+				Name:  fmt.Sprintf("%s", key),
+				Value: "on",
+				Data:  "true",
+			}, nil
+		},
+	}
+	feature, _ := fdb.Get([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"on","data":"true"}`
 	checkResult(string(feature.Serialize()), target, t)
 }
 
 func TestUnsetFeatureSerializes(t *testing.T) {
-	InitTestDB()
-	defer TestDB.db.Close()
-	feature, _ := TestDB.Get([]byte("scope1"), []byte("feature1"))
+	fdb := MockPersistenceStore{
+		OnGet: func(scope, key []byte) (Serializable, error) {
+			return FlipadelphiaFeature{
+				Name:  fmt.Sprintf("%s", key),
+				Value: "",
+				Data:  "false",
+			}, nil
+		},
+	}
+	feature, _ := fdb.Get([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"","data":"false"}`
 	checkResult(string(feature.Serialize()), target, t)
 }
 
 func TestGetScopeFeaturesSerializes(t *testing.T) {
-	InitTestDB()
-	defer TestDB.db.Close()
-	TestDB.Set([]byte("scope1"), []byte("feature1"), []byte("on"))
-	TestDB.Set([]byte("scope1"), []byte("feature2"), []byte("on"))
-	TestDB.Set([]byte("scope1"), []byte("feature3"), []byte("on"))
-	features, _ := TestDB.GetScopeFeatures([]byte("scope1"))
-	actual := sortFeatures(features)
+	fdb := MockPersistenceStore{
+		OnGetScopeFeatures: func(scope []byte) (Serializable, error) {
+			return FlipadelphiaScopeFeatures{"feature1", "feature2", "feature3"}, nil
+		},
+	}
+	features, _ := fdb.GetScopeFeatures([]byte("scope1"))
 	target := `["feature1","feature2","feature3"]`
-	checkResult(string(actual.Serialize()), target, t)
+	checkResult(string(features.Serialize()), target, t)
 }
 
 func TestGetEmptyScopeFeaturesSerializes(t *testing.T) {
-	InitTestDB()
-	defer TestDB.db.Close()
-	features, _ := TestDB.GetScopeFeatures([]byte("scope1"))
+	fdb := MockPersistenceStore{
+		OnGetScopeFeatures: func(scope []byte) (Serializable, error) {
+			return FlipadelphiaScopeFeatures{}, nil
+		},
+	}
+	features, _ := fdb.GetScopeFeatures([]byte("scope1"))
 	target := `[]`
 	checkResult(string(features.Serialize()), target, t)
 }
 
 func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
-	InitTestDB()
-	defer TestDB.db.Close()
-	TestDB.Set([]byte("scope1"), []byte("feature1"), []byte("on"))
-	TestDB.Set([]byte("scope1"), []byte("feature2"), []byte("on"))
-	TestDB.Set([]byte("scope1"), []byte("feature3"), []byte("off"))
-	TestDB.Set([]byte("scope1"), []byte("feature4"), []byte("on"))
-	TestDB.Set([]byte("scope1"), []byte("feature5"), []byte("0"))
-	TestDB.Set([]byte("scope1"), []byte("feature6"), []byte("ON"))
-	TestDB.Set([]byte("scope1"), []byte("feature6"), []byte(""))
-	TestDB.Set([]byte("scope2"), []byte("feature6"), []byte("on"))
-	features, _ := TestDB.GetScopeFeaturesFilterByValue([]byte("scope1"), []byte("on"))
+	fdb := MockPersistenceStore{
+		OnGetScopeFeaturesFilterByValue: func(scope, value []byte) (Serializable, error) {
+			return FlipadelphiaScopeFeatures{"feature1", "feature2", "feature4"}, nil
+		},
+	}
+	features, _ := fdb.GetScopeFeaturesFilterByValue([]byte("scope1"), []byte("on"))
 	actual := sortFeatures(features)
 	target := `["feature1","feature2","feature4"]`
 	checkResult(string(actual.Serialize()), target, t)
+}
+
+func TestMergeScopeKeyBothValid(t *testing.T) {
+	actual, err := MergeScopeKey([]byte("user-1"), []byte("feature1"))
+	target := `user-1:feature1`
+	if err != nil {
+		t.Errorf("Error merging scope and key: %s", err)
+	}
+	checkResult(string(actual), target, t)
+}
+
+func TestMergeScopeKeyInvalidScope(t *testing.T) {
+	_, err := MergeScopeKey([]byte("user:1"), []byte("feature1"))
+	if err == nil {
+		t.Errorf("Invalid scope did not cause error: %s", err)
+	}
+	target := fmt.Errorf("Invalid scope: Can not contain ':' character")
+	checkResult(err.Error(), target.Error(), t)
+}
+
+func TestMergeScopeKeyInvalidKey(t *testing.T) {
+	_, err := MergeScopeKey([]byte("user-1"), []byte("feature,1"))
+	if err == nil {
+		t.Errorf("Invalid key did not cause error: %s", err)
+	}
+	target := fmt.Errorf("Invalid key character '%s': Valid characters are '%s'", ",", validFeatureKeyCharacters)
+	t.Logf("%s", target)
+	t.Logf("%s", err)
+	checkResult(err.Error(), target.Error(), t)
 }

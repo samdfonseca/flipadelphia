@@ -92,18 +92,16 @@ func setFeatureHandler(db store.PersistenceStore, auth Authenticator) http.Handl
 			return
 		}
 		vars := mux.Vars(r)
-		feature_name := []byte(vars["feature_name"])
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
-		var bodyJson map[string]string
-		json.Unmarshal(body, &bodyJson)
-		scope := []byte(bodyJson["scope"])
-		value := []byte(bodyJson["value"])
-		_, err = db.Set(scope, feature_name, value)
+		var setFeatureOptions store.FlipadelphiaSetFeatureOptions
+		json.Unmarshal(body, &setFeatureOptions)
+		setFeatureOptions.Key = []byte(vars["feature_name"])
+		_, err = db.Set(setFeatureOptions.Scope, setFeatureOptions.Key, setFeatureOptions.Value)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			feature, _ := db.Get(scope, feature_name)
+			feature, _ := db.Get(setFeatureOptions.Scope, setFeatureOptions.Key)
 			w.WriteHeader(http.StatusOK)
 			w.Write(feature.Serialize())
 		}

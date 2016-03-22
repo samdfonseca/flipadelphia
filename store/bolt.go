@@ -21,6 +21,12 @@ type FlipadelphiaFeature struct {
 	Data  string `json:"data"`
 }
 
+type FlipadelphiaSetFeatureOptions struct {
+	Key   []byte
+	Scope []byte `json:"scope"`
+	Value []byte `json:"value"`
+}
+
 type pageIndexValue [][]byte
 
 type PagerIndex struct {
@@ -28,6 +34,8 @@ type PagerIndex struct {
 }
 
 type FlipadelphiaScopeFeatures []string
+
+var validFeatureKeyCharacters = []byte(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-`)
 
 func createBucket(db *bolt.DB, bucketName []byte) error {
 	err := db.Update(func(tx *bolt.Tx) error {
@@ -61,6 +69,18 @@ func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 		Value: string(value),
 		Data:  fmt.Sprint(data),
 	}
+}
+
+func MergeScopeKey(scope, key []byte) ([]byte, error) {
+	if bytes.Contains(scope, []byte(":")) {
+		return []byte{}, fmt.Errorf("Invalid scope: Can not contain ':' character")
+	}
+	for _, b := range key {
+		if !bytes.Contains(validFeatureKeyCharacters, []byte{b}) {
+			return []byte{}, fmt.Errorf("Invalid key character '%s': Valid characters are '%s'", string(b), validFeatureKeyCharacters)
+		}
+	}
+	return bytes.Join([][]byte{scope, key}, []byte(":")), nil
 }
 
 func (fdb FlipadelphiaDB) getScopeKeyValues(scope []byte) (map[string][]byte, error) {
@@ -97,8 +117,11 @@ func (fdb FlipadelphiaDB) getScopeKeyValuesWithCertainValue(scope []byte, target
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
 	err := fdb.db.Batch(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("features"))
-		scopeKey := bytes.Join([][]byte{scope, key}, []byte(":"))
-		err := bucket.Put(scopeKey, value)
+		scopeKey, err := MergeScopeKey(scope, key)
+		if err != nil {
+			return err
+		}
+		err = bucket.Put(scopeKey, value)
 		if err != nil {
 			return err
 		}

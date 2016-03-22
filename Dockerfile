@@ -10,7 +10,6 @@ RUN mkdir -p /go/src/github.com/samdfonseca/ && \
     cp config/config.example.json $HOME/.flipadelphia/config.json && \
     make install
 
-ENV FLIPADELPHIA_ENV=development
+ENV FLIPADELPHIA_ENV=noauth
 EXPOSE 3006
 ENTRYPOINT ["flipadelphia", "serve"]
-
