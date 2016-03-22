@@ -18,6 +18,9 @@ vet:
 dev:
 	go build && ./flipadelphia serve --env development
 
+noauth:
+	go build && ./flipadelphia serve --env noauth
+
 check:
 	go build && ./flipadelphia sanitycheck
 

@@ -48,15 +48,20 @@ func createBucket(db *bolt.DB, bucketName []byte) error {
 }
 
 func NewFlipadelphiaDB(db *bolt.DB) FlipadelphiaDB {
-	err := db.View(func(tx *bolt.Tx) error {
-		if tx.Bucket([]byte("features")) != nil {
-			return nil
-		}
-		return fmt.Errorf("Bucket \"features\" already exists")
-	})
-	if err != nil {
-		if err := createBucket(db, []byte("features")); err != nil {
-			utils.FailOnError(err, "EXITING - Unable to create required bucket", false)
+	requiredBuckets := [][]byte{
+		[]byte("features"),
+	}
+	for _, bucket := range requiredBuckets {
+		err := db.View(func(tx *bolt.Tx) error {
+			if tx.Bucket(bucket) != nil {
+				return nil
+			}
+			return fmt.Errorf(`Bucket "%s" already exists`, bucket)
+		})
+		if err != nil {
+			if err := createBucket(db, bucket); err != nil {
+				utils.FailOnError(err, fmt.Sprintf("EXITING - Unable to create required bucket '%s'", bucket), false)
+			}
 		}
 	}
 	return FlipadelphiaDB{db: db}

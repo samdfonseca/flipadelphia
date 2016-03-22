@@ -134,7 +134,5 @@ func TestMergeScopeKeyInvalidKey(t *testing.T) {
 		t.Errorf("Invalid key did not cause error: %s", err)
 	}
 	target := fmt.Errorf("Invalid key character '%s': Valid characters are '%s'", ",", validFeatureKeyCharacters)
-	t.Logf("%s", target)
-	t.Logf("%s", err)
 	checkResult(err.Error(), target.Error(), t)
 }
