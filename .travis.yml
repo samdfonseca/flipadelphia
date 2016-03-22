@@ -8,5 +8,6 @@ deploy:
   api_key:
     secure: vj4syG5sRjoLkrW2E+/vl3oCxkZmp54tIbRl1MJ7FV4hFg7aePoPT3ikwXdiM2jftq69X1BWYj8NxbyNCWE70Tmg5k1cvI0haYgw/9dQQxJIeeSCXjmBrAfreeyYuXi88v0ubAFYet0z/o0m7iWAB2ZdMVnCOzCToCppmmXoVh/DRx2LH9iC5tfMkctOU/RC4pzfkq4nu7TQ5yy19h3OCSrDPM3QoRNql+JMnpXlghN0QI3hMbq1sebgOKCOn57JY5B//ut+OfdSjr8rpqo2SQJ8fm/AjY29+1K9z08m1xLiyxvD9OwnWQBpZzX9kiwE9a+Ruy29zF0a+eQTx9ltvEa28qTliJzkTtK47rd7AxjlAi7YFyp6R85d++Oie5F9KiZ0JFmTeE8wZQFreOsg33nQ1gmz1lihv4b6s5Rdr1p/Zf7WvE9HeFD1wPmp6oHaNMQV/LHQYoOaEGO4Rd4lJ/lVIN2Sgl+2xLwIjKGnwagSgBWnHUUfRGVtkoN170qKox+R71Xs9fyasYUEk3oIZTEFB0UEFCShayZssU32pYUJtRo6YtCE7MrxpEapbSPrf18QoIaqCBOYBropAdXX6F8TN1D2RZYDKbkKw5/d9wySSHsYndIVsT4YXu+UnivsIqlcp6loiumwk4marQ4iQPfLyBsomqQ38GYZ3nyOpSk=
   file: flipadelphia
+  skip_cleanup: true
   on:
-    repo: samdfonseca/flipadelphia
+    tags: true
