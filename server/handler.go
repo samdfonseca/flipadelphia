@@ -12,22 +12,33 @@ import (
 	"github.com/samdfonseca/flipadelphia/utils"
 )
 
-func App(db store.PersistenceStore, auth Authenticator) http.Handler {
+func App(db store.PersistenceStore) http.Handler {
 	router := mux.NewRouter()
-	admin_router := router.PathPrefix("/admin").Subrouter()
-
 	router.HandleFunc("/", homeHandler)
+
 	router.HandleFunc("/features", checkScopeFeaturesForValueHandler(db)).
 		Methods("GET").
-		Queries("scope", "{scope:[0-9A-Za-z_-]*}", "value", "{value:[0-9A-Za-z_-]*}")
+		Queries("scope", "{scope:[0-9A-Za-z_-]+}", "value", "{value:[0-9A-Za-z_-]+}")
 	router.HandleFunc("/features", checkAllScopeFeaturesHandler(db)).
 		Methods("GET").
-		Queries("scope", "{scope:[0-9A-Za-z_-]*}")
+		Queries("scope", "{scope:[0-9A-Za-z_-]+}")
 	router.HandleFunc("/features/{feature_name}", checkFeatureHandler(db)).
 		Methods("GET").
-		Queries("scope", "{scope:[0-9A-Za-z_-]*}")
-	admin_router.HandleFunc("/features/{feature_name}", setFeatureHandler(db, auth)).
+		Queries("scope", "{scope:[0-9A-Za-z_-]+}")
+
+	router.HandleFunc("/admin/features/{feature_name}", setFeatureHandler(db)).
 		Methods("PUT", "POST")
+	router.HandleFunc("/admin/scopes", getScopesWithPrefixHandler(db)).
+		Methods("GET").
+		Queries("prefix", "{prefix:[0-9A-Za-z_-]+}")
+	router.HandleFunc("/admin/scopes", getScopesWithFeatureHandler(db)).
+		Methods("GET").
+		Queries("feature", "{feature:.+}")
+	router.HandleFunc("/admin/scopes", getScopesHandler(db)).
+		Methods("GET")
+	router.HandleFunc("/admin/features", getAllFeaturesHandler(db)).
+		Methods("GET")
+
 	n := negroni.Classic()
 	n.UseHandler(router)
 	return n
@@ -82,21 +93,23 @@ func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFu
 	})
 }
 
-func setFeatureHandler(db store.PersistenceStore, auth Authenticator) http.HandlerFunc {
+func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if isAuthed, err := auth.AuthenticateRequest(r); err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(err.Error()))
-			return
-		} else if !isAuthed {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
 		vars := mux.Vars(r)
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Error reading request body"))
+			return
+		}
 		var setFeatureOptions store.FlipadelphiaSetFeatureOptions
-		json.Unmarshal(body, &setFeatureOptions)
+		err = json.Unmarshal(body, &setFeatureOptions)
+		if err != nil {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte("Unprocessable entity"))
+			return
+		}
 		setFeatureOptions.Key = []byte(vars["feature_name"])
 		_, err = db.Set(setFeatureOptions.Scope, setFeatureOptions.Key, setFeatureOptions.Value)
 		if err != nil {
@@ -105,6 +118,62 @@ func setFeatureHandler(db store.PersistenceStore, auth Authenticator) http.Handl
 			feature, _ := db.Get(setFeatureOptions.Scope, setFeatureOptions.Key)
 			w.WriteHeader(http.StatusOK)
 			w.Write(feature.Serialize())
+		}
+	})
+}
+
+func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		scopes, err := db.GetScopes()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(scopes.Serialize())
+		}
+	})
+}
+
+func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		prefix := vars["prefix"]
+		scopes, err := db.GetScopesWithPrefix([]byte(prefix))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(scopes.Serialize())
+		}
+	})
+}
+
+func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		feature := vars["feature"]
+		scopes, err := db.GetScopesWithFeature([]byte(feature))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(scopes.Serialize())
+		}
+	})
+}
+
+func getAllFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		features, err := db.GetFeatures()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(features.Serialize())
 		}
 	})
 }

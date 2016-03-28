@@ -66,11 +66,7 @@ func main() {
 				defer db.Close()
 				flipDB := store.NewFlipadelphiaDB(db)
 				utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
-				auth := server.NewAuthSettings(config.Config.AuthRequestURL,
-					config.Config.AuthRequestMethod,
-					config.Config.AuthRequestHeader,
-					config.Config.AuthRequestSuccessStatusCode)
-				err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB, auth))
+				err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
 				utils.FailOnError(err, "Something went wrong", true)
 			},
 		},

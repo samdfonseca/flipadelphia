@@ -66,7 +66,7 @@ OPTIONS:
 Auth settings are defined in the config.json file for the runtime environment
 
 ```sh
-$ curl -s -H "X-SESSION-TOKEN:abc123" -d '{"scope":"user-1","value":"on"}' -X POST localhost:3006/features/feature1 | jq .
+$ curl -s -H "X-SESSION-TOKEN:abc123" -d '{"scope":"user-1","value":"on"}' -X POST localhost:3006/admin/features/feature1 | jq .
 {
   "name": "feature1",
   "value": "on",
@@ -123,6 +123,44 @@ $ curl -s -d '{"scope":"user-1","value":"1"}' -X POST localhost:3006/features/fe
 $ curl -s localhost:3006/features?scope=user-1\&value=1 | jq .
 [
   "feature2"
+]
+```
+
+### Admin functions
+
+Get all scopes
+
+```sh
+$ curl -s localhost:3006/admin/scopes | jq .
+[
+  "user-1",
+  "user-2",
+  "user-3",
+  "venue-1",
+  "venue-2",
+  "venue-3"
+]
+```
+
+Get all scopes matching a prefix
+
+```sh
+$ curl -s localhost:3006/admin/scopes?prefix=user | jq .
+[
+  "user-1",
+  "user-2",
+  "user-3"
+]
+```
+
+Get all features
+
+```sh
+$ curl -s localhost:3006/admin/features | jq .
+[
+  "feature1",
+  "feature2",
+  "feature3"
 ]
 ```
 

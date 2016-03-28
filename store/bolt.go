@@ -136,7 +136,7 @@ func (fdb FlipadelphiaDB) getAllScopes() (FlipadelphiaScopeList, error) {
 		var previousScope []byte
 		bucket.ForEach(func(key, val []byte) error {
 			scope, _, err := SplitScopeKey(key)
-			if err != nil && !bytes.Equal(scope, previousScope) {
+			if err == nil && !bytes.Equal(scope, previousScope) {
 				scopes = append(scopes, fmt.Sprintf("%s", scope))
 				previousScope = scope
 			}
@@ -154,7 +154,7 @@ func (fdb FlipadelphiaDB) getAllScopesWithPrefix(prefix []byte) (FlipadelphiaSco
 		var previousScope []byte
 		for key, _ := cursor.Seek(prefix); bytes.HasPrefix(key, prefix); key, _ = cursor.Next() {
 			scope, _, err := SplitScopeKey(key)
-			if err != nil && !bytes.Equal(scope, previousScope) {
+			if err == nil && !bytes.Equal(scope, previousScope) {
 				scopes = append(scopes, fmt.Sprintf("%s", scope))
 				previousScope = scope
 			}
@@ -162,6 +162,40 @@ func (fdb FlipadelphiaDB) getAllScopesWithPrefix(prefix []byte) (FlipadelphiaSco
 		return nil
 	})
 	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) getAllScopesWithFeature(feature []byte) (FlipadelphiaScopeList, error) {
+	var scopes FlipadelphiaScopeList
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("features"))
+		bucket.ForEach(func(scopeKey, val []byte) error {
+			scope, key, err := SplitScopeKey(scopeKey)
+			if err == nil && bytes.Equal(feature, key) {
+				scopes = append(scopes, fmt.Sprintf("%s", scope))
+			}
+			return nil
+		})
+		return nil
+	})
+	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) getAllFeatures() (FlipadelphiaScopeFeatures, error) {
+	var features FlipadelphiaScopeFeatures
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("features"))
+		var previousFeature []byte
+		bucket.ForEach(func(key, val []byte) error {
+			_, feature, err := SplitScopeKey(key)
+			if err == nil && !bytes.Equal(feature, previousFeature) {
+				features = append(features, fmt.Sprintf("%s", feature))
+				previousFeature = feature
+			}
+			return nil
+		})
+		return nil
+	})
+	return features, err
 }
 
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
@@ -222,9 +256,19 @@ func (fdb FlipadelphiaDB) GetScopes() (Serializable, error) {
 	return scopes, err
 }
 
-func (fdb FlipadelphiaDB) GetScopeWithPrefix(prefix []byte) (Serializable, error) {
+func (fdb FlipadelphiaDB) GetScopesWithPrefix(prefix []byte) (Serializable, error) {
 	scopes, err := fdb.getAllScopesWithPrefix(prefix)
 	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) GetScopesWithFeature(feature []byte) (Serializable, error) {
+	scopes, err := fdb.getAllScopesWithFeature(feature)
+	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) GetFeatures() (Serializable, error) {
+	features, err := fdb.getAllFeatures()
+	return features, err
 }
 
 func (feature FlipadelphiaFeature) Serialize() []byte {
