@@ -24,7 +24,7 @@ func getCheckFeatureURL(server, feature, scope string) string {
 }
 
 func getSetFeatureURL(server, feature string) string {
-	return fmt.Sprintf("%s/features/%s", server, feature)
+	return fmt.Sprintf("%s/admin/features/%s", server, feature)
 }
 
 func getCheckAllScopeFeaturesURL(server, scope string) string {

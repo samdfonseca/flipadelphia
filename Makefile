@@ -28,7 +28,9 @@ install:
 	mv flipadelphia /usr/bin/
 
 test:
-	mkdir ~/.flipadelphia && cp config/config.example.json ~/.flipadelphia/config.json && go test -v ./config && go test -v ./store
+	- go test -v ./config
+	- go test -v ./store
+	- go test -v ./server
 
 debug:
 	go build && dlv exec ./flipadelphia s

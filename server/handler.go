@@ -14,6 +14,7 @@ import (
 
 func App(db store.PersistenceStore, auth Authenticator) http.Handler {
 	router := mux.NewRouter()
+	admin_router := router.PathPrefix("/admin").Subrouter()
 
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/features", checkScopeFeaturesForValueHandler(db)).
@@ -25,7 +26,7 @@ func App(db store.PersistenceStore, auth Authenticator) http.Handler {
 	router.HandleFunc("/features/{feature_name}", checkFeatureHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]*}")
-	router.HandleFunc("/features/{feature_name}", setFeatureHandler(db, auth)).
+	admin_router.HandleFunc("/features/{feature_name}", setFeatureHandler(db, auth)).
 		Methods("PUT", "POST")
 	n := negroni.Classic()
 	n.UseHandler(router)
