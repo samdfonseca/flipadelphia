@@ -34,6 +34,7 @@ type PagerIndex struct {
 }
 
 type FlipadelphiaScopeFeatures []string
+type FlipadelphiaScopeList []string
 
 var validFeatureKeyCharacters = []byte(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-`)
 
@@ -88,6 +89,15 @@ func MergeScopeKey(scope, key []byte) ([]byte, error) {
 	return bytes.Join([][]byte{scope, key}, []byte(":")), nil
 }
 
+func SplitScopeKey(scopeKey []byte) ([]byte, []byte, error) {
+	if !bytes.Contains(scopeKey, []byte(":")) {
+		err := fmt.Errorf(`ScopeKey missing ":" character`)
+		return []byte{}, []byte{}, err
+	}
+	splits := bytes.SplitN(scopeKey, []byte(":"), 2)
+	return splits[0], splits[1], nil
+}
+
 func (fdb FlipadelphiaDB) getScopeKeyValues(scope []byte) (map[string][]byte, error) {
 	keys := make(map[string][]byte)
 	err := fdb.db.View(func(tx *bolt.Tx) error {
@@ -117,6 +127,41 @@ func (fdb FlipadelphiaDB) getScopeKeyValuesWithCertainValue(scope []byte, target
 		}
 	}
 	return keys, err
+}
+
+func (fdb FlipadelphiaDB) getAllScopes() (FlipadelphiaScopeList, error) {
+	var scopes FlipadelphiaScopeList
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("features"))
+		var previousScope []byte
+		bucket.ForEach(func(key, val []byte) error {
+			scope, _, err := SplitScopeKey(key)
+			if err != nil && !bytes.Equal(scope, previousScope) {
+				scopes = append(scopes, fmt.Sprintf("%s", scope))
+				previousScope = scope
+			}
+			return nil
+		})
+		return nil
+	})
+	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) getAllScopesWithPrefix(prefix []byte) (FlipadelphiaScopeList, error) {
+	var scopes FlipadelphiaScopeList
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		cursor := tx.Bucket([]byte("features")).Cursor()
+		var previousScope []byte
+		for key, _ := cursor.Seek(prefix); bytes.HasPrefix(key, prefix); key, _ = cursor.Next() {
+			scope, _, err := SplitScopeKey(key)
+			if err != nil && !bytes.Equal(scope, previousScope) {
+				scopes = append(scopes, fmt.Sprintf("%s", scope))
+				previousScope = scope
+			}
+		}
+		return nil
+	})
+	return scopes, err
 }
 
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
@@ -172,6 +217,16 @@ func (fdb FlipadelphiaDB) GetScopeFeaturesFilterByValue(scope []byte, value []by
 	return featureList, err
 }
 
+func (fdb FlipadelphiaDB) GetScopes() (Serializable, error) {
+	scopes, err := fdb.getAllScopes()
+	return scopes, err
+}
+
+func (fdb FlipadelphiaDB) GetScopeWithPrefix(prefix []byte) (Serializable, error) {
+	scopes, err := fdb.getAllScopesWithPrefix(prefix)
+	return scopes, err
+}
+
 func (feature FlipadelphiaFeature) Serialize() []byte {
 	serializedFeature, err := json.Marshal(feature)
 	if err != nil {
@@ -191,4 +246,16 @@ func (features FlipadelphiaScopeFeatures) Serialize() []byte {
 		return []byte("")
 	}
 	return serializedFeatures
+}
+
+func (scopes FlipadelphiaScopeList) Serialize() []byte {
+	if scopes == nil {
+		return []byte("[]")
+	}
+	serializedScopes, err := json.Marshal(scopes)
+	if err != nil {
+		utils.LogOnError(err, "Unable to serialize scopes", true)
+		return []byte("")
+	}
+	return serializedScopes
 }

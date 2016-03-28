@@ -38,11 +38,26 @@ func sortFeatures(features Serializable) FlipadelphiaScopeFeatures {
 	return sortedFeatures
 }
 
-func checkResult(actual, target string, t *testing.T) {
+func assertEqual(actual, target string, t *testing.T) {
 	if actual != target {
 		t.Logf("Target: %s", target)
 		t.Logf("Actual: %s", actual)
 		t.Errorf("Actual value did not match target value")
+	}
+}
+
+func assertNil(actual interface{}, t *testing.T) {
+	if actual != nil {
+		t.Logf("Actual: %s", actual)
+		t.Errorf("Actual is not nil")
+	}
+}
+
+func assertErrorEqual(actual, target error, t *testing.T) {
+	if fmt.Sprintf("%s", actual) != fmt.Sprintf("%s", target) {
+		t.Logf("Target: %s", nil)
+		t.Logf("Actual: %s", actual)
+		t.Errorf("Actual error did not match target error")
 	}
 }
 
@@ -58,7 +73,7 @@ func TestSetFeatureSerializes(t *testing.T) {
 	}
 	feature, _ := fdb.Get([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"on","data":"true"}`
-	checkResult(string(feature.Serialize()), target, t)
+	assertEqual(string(feature.Serialize()), target, t)
 }
 
 func TestUnsetFeatureSerializes(t *testing.T) {
@@ -73,7 +88,7 @@ func TestUnsetFeatureSerializes(t *testing.T) {
 	}
 	feature, _ := fdb.Get([]byte("scope1"), []byte("feature1"))
 	target := `{"name":"feature1","value":"","data":"false"}`
-	checkResult(string(feature.Serialize()), target, t)
+	assertEqual(string(feature.Serialize()), target, t)
 }
 
 func TestGetScopeFeaturesSerializes(t *testing.T) {
@@ -84,7 +99,7 @@ func TestGetScopeFeaturesSerializes(t *testing.T) {
 	}
 	features, _ := fdb.GetScopeFeatures([]byte("scope1"))
 	target := `["feature1","feature2","feature3"]`
-	checkResult(string(features.Serialize()), target, t)
+	assertEqual(string(features.Serialize()), target, t)
 }
 
 func TestGetEmptyScopeFeaturesSerializes(t *testing.T) {
@@ -95,7 +110,7 @@ func TestGetEmptyScopeFeaturesSerializes(t *testing.T) {
 	}
 	features, _ := fdb.GetScopeFeatures([]byte("scope1"))
 	target := `[]`
-	checkResult(string(features.Serialize()), target, t)
+	assertEqual(string(features.Serialize()), target, t)
 }
 
 func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
@@ -107,7 +122,7 @@ func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
 	features, _ := fdb.GetScopeFeaturesFilterByValue([]byte("scope1"), []byte("on"))
 	actual := sortFeatures(features)
 	target := `["feature1","feature2","feature4"]`
-	checkResult(string(actual.Serialize()), target, t)
+	assertEqual(string(actual.Serialize()), target, t)
 }
 
 func TestMergeScopeKeyBothValid(t *testing.T) {
@@ -116,7 +131,7 @@ func TestMergeScopeKeyBothValid(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error merging scope and key: %s", err)
 	}
-	checkResult(string(actual), target, t)
+	assertEqual(string(actual), target, t)
 }
 
 func TestMergeScopeKeyInvalidScope(t *testing.T) {
@@ -125,7 +140,7 @@ func TestMergeScopeKeyInvalidScope(t *testing.T) {
 		t.Errorf("Invalid scope did not cause error: %s", err)
 	}
 	target := fmt.Errorf("Invalid scope: Can not contain ':' character")
-	checkResult(err.Error(), target.Error(), t)
+	assertEqual(err.Error(), target.Error(), t)
 }
 
 func TestMergeScopeKeyInvalidKey(t *testing.T) {
@@ -134,5 +149,29 @@ func TestMergeScopeKeyInvalidKey(t *testing.T) {
 		t.Errorf("Invalid key did not cause error: %s", err)
 	}
 	target := fmt.Errorf("Invalid key character '%s': Valid characters are '%s'", ",", validFeatureKeyCharacters)
-	checkResult(err.Error(), target.Error(), t)
+	assertEqual(err.Error(), target.Error(), t)
+}
+
+func TestSplitScopeKeyValidScopeKey(t *testing.T) {
+	actualScope, actualKey, err := SplitScopeKey([]byte("user-1:feature1"))
+	assertNil(err, t)
+	assertEqual(string(actualScope), "user-1", t)
+	assertEqual(string(actualKey), "feature1", t)
+}
+
+func TestSplitScopeKeyInvalidMissingColon(t *testing.T) {
+	_, _, err := SplitScopeKey([]byte("user-1 feature1"))
+	target := fmt.Errorf(`ScopeKey missing ":" character`)
+	assertErrorEqual(err, target, t)
+}
+
+func TestGetScopesSerializes(t *testing.T) {
+	fdb := MockPersistenceStore{
+		OnGetScopes: func() (Serializable, error) {
+			return FlipadelphiaScopeList{"user-1", "user-2"}, nil
+		},
+	}
+	actual, _ := fdb.GetScopes()
+	target := `["user-1","user-2"]`
+	assertEqual(string(actual.Serialize()), target, t)
 }

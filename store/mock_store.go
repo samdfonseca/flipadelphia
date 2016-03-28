@@ -5,6 +5,8 @@ type MockPersistenceStore struct {
 	OnGetScopeFeatures              func([]byte) (Serializable, error)
 	OnGetScopeFeaturesFilterByValue func([]byte, []byte) (Serializable, error)
 	OnSet                           func([]byte, []byte, []byte) (Serializable, error)
+	OnGetScopes			func() (Serializable, error)
+	OnGetScopesWithPrefix		func([]byte) (Serializable, error)
 }
 
 func (mStore MockPersistenceStore) Get(scope, key []byte) (Serializable, error) {
@@ -21,4 +23,12 @@ func (mStore MockPersistenceStore) GetScopeFeaturesFilterByValue(scope, value []
 
 func (mStore MockPersistenceStore) Set(scope, key, value []byte) (Serializable, error) {
 	return mStore.OnSet(scope, key, value)
+}
+
+func (mStore MockPersistenceStore) GetScopes() (Serializable, error) {
+	return mStore.OnGetScopes()
+}
+
+func (mStore MockPersistenceStore) GetScopesWithPrefix(prefix []byte) (Serializable, error) {
+	return mStore.OnGetScopesWithPrefix(prefix)
 }
