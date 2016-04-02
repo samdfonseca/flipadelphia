@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"fmt"
+
 	"github.com/boltdb/bolt"
 	"github.com/samdfonseca/flipadelphia/config"
 )
@@ -55,7 +56,7 @@ func assertNil(actual interface{}, t *testing.T) {
 
 func assertErrorEqual(actual, target error, t *testing.T) {
 	if fmt.Sprintf("%s", actual) != fmt.Sprintf("%s", target) {
-		t.Logf("Target: %s", nil)
+		t.Logf("Target: %s", target)
 		t.Logf("Actual: %s", actual)
 		t.Errorf("Actual error did not match target error")
 	}

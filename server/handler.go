@@ -48,6 +48,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("flipadelphia flips your features"))
 }
 
+// Handler for GET to "/features/{feature_name}?scope=..."
 func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -64,6 +65,7 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
+// Handler for GET to "/features?scope=..."
 func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scope := r.FormValue("scope")
@@ -78,6 +80,7 @@ func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
+// Handler for GET to "/features?scope=...&value=..."
 func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scope := r.FormValue("scope")
@@ -93,11 +96,13 @@ func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFu
 	})
 }
 
+// Handler for "/admin/features/{feature_name}"
 func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
+		utils.Output(string(body))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error reading request body"))
@@ -107,21 +112,23 @@ func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		err = json.Unmarshal(body, &setFeatureOptions)
 		if err != nil {
 			w.WriteHeader(http.StatusNotAcceptable)
-			w.Write([]byte("Unprocessable entity"))
+			errMsg := fmt.Sprintf("Unprocessable entity: %s", err.Error())
+			w.Write([]byte(errMsg))
 			return
 		}
-		setFeatureOptions.Key = []byte(vars["feature_name"])
-		_, err = db.Set(setFeatureOptions.Scope, setFeatureOptions.Key, setFeatureOptions.Value)
+		setFeatureOptions.Key = vars["feature_name"]
+		_, err = db.Set([]byte(setFeatureOptions.Scope), []byte(setFeatureOptions.Key), []byte(setFeatureOptions.Value))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			feature, _ := db.Get(setFeatureOptions.Scope, setFeatureOptions.Key)
+			feature, _ := db.Get([]byte(setFeatureOptions.Scope), []byte(setFeatureOptions.Key))
 			w.WriteHeader(http.StatusOK)
 			w.Write(feature.Serialize())
 		}
 	})
 }
 
+// Handler for GET to "/admin/scopes"
 func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scopes, err := db.GetScopes()
@@ -135,6 +142,7 @@ func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
+// Handler for GET to "/admin/scopes?prefix=..."
 func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -150,6 +158,7 @@ func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
+// Handler for GET to "/admin/scopes?feature=..."
 func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -165,6 +174,7 @@ func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	})
 }
 
+// Handler for GET to "/admin/features"
 func getAllFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		features, err := db.GetFeatures()

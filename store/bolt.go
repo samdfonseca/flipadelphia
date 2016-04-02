@@ -10,30 +10,30 @@ import (
 	"github.com/samdfonseca/flipadelphia/utils"
 )
 
+// FlipadelphiaDB holds a pointer to the boltdb instance and the name of the main bucket.
 type FlipadelphiaDB struct {
 	db         *bolt.DB
-	bucketName string "features"
+	bucketName string
 }
 
+// FlipadelphiaFeature holds the name, value and data attributes of a feature.
 type FlipadelphiaFeature struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 	Data  string `json:"data"`
 }
 
+// FlipadelphiaSetFeatureOptions is a helper struct to store the values needed to set a feature.
 type FlipadelphiaSetFeatureOptions struct {
-	Key   []byte
-	Scope []byte `json:"scope"`
-	Value []byte `json:"value"`
+	Key   string
+	Scope string `json:"scope"`
+	Value string `json:"value"`
 }
 
-type pageIndexValue [][]byte
-
-type PagerIndex struct {
-	db *bolt.DB
-}
-
+// FlipadelphiaScopeFeatures is a type alias for []string.
 type FlipadelphiaScopeFeatures []string
+
+// FlipadelphiaScopeList is a type alias for []string.
 type FlipadelphiaScopeList []string
 
 var validFeatureKeyCharacters = []byte(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-`)
@@ -48,6 +48,8 @@ func createBucket(db *bolt.DB, bucketName []byte) error {
 	return err
 }
 
+// NewFlipadelphiaDB creates a new instance of FlipadelphiaDB. The "features" bucket is created
+// if it does not yet exist.
 func NewFlipadelphiaDB(db *bolt.DB) FlipadelphiaDB {
 	requiredBuckets := [][]byte{
 		[]byte("features"),
@@ -65,9 +67,10 @@ func NewFlipadelphiaDB(db *bolt.DB) FlipadelphiaDB {
 			}
 		}
 	}
-	return FlipadelphiaDB{db: db}
+	return FlipadelphiaDB{db: db, bucketName: "features"}
 }
 
+// NewFlipadelphiaFeature returns a new instance of FlipadelphiaFeature.
 func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 	data := string(value) != ""
 	return FlipadelphiaFeature{
@@ -77,6 +80,7 @@ func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 	}
 }
 
+// MergeScopeKey joins two []byte around the ":" character.
 func MergeScopeKey(scope, key []byte) ([]byte, error) {
 	if bytes.Contains(scope, []byte(":")) {
 		return []byte{}, fmt.Errorf("Invalid scope: Can not contain ':' character")
@@ -89,6 +93,7 @@ func MergeScopeKey(scope, key []byte) ([]byte, error) {
 	return bytes.Join([][]byte{scope, key}, []byte(":")), nil
 }
 
+// SplitScopeKey splits a []byte on the first ":" character.
 func SplitScopeKey(scopeKey []byte) ([]byte, []byte, error) {
 	if !bytes.Contains(scopeKey, []byte(":")) {
 		err := fmt.Errorf(`ScopeKey missing ":" character`)
@@ -198,6 +203,7 @@ func (fdb FlipadelphiaDB) getAllFeatures() (FlipadelphiaScopeFeatures, error) {
 	return features, err
 }
 
+// Set stores the feature in the database and returns an instance of FlipadelphiaFeature.
 func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
 	err := fdb.db.Batch(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("features"))
@@ -214,6 +220,7 @@ func (fdb FlipadelphiaDB) Set(scope []byte, key []byte, value []byte) (Serializa
 	return NewFlipadelphiaFeature(key, value), err
 }
 
+// Get retrieves the feature from the database and returns an instance of FlipadelphiaFeature.
 func (fdb FlipadelphiaDB) Get(scope []byte, key []byte) (Serializable, error) {
 	var value []byte
 	var resultBuffer bytes.Buffer
@@ -227,50 +234,57 @@ func (fdb FlipadelphiaDB) Get(scope []byte, key []byte) (Serializable, error) {
 	return NewFlipadelphiaFeature(key, value), err
 }
 
+// GetScopeFeatures returns all features set on the given scope.
 func (fdb FlipadelphiaDB) GetScopeFeatures(scope []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
 	scopeKeys, err := fdb.getScopeKeyValues(scope)
 	if err != nil {
 		return featureList, err
 	}
-	for key, _ := range scopeKeys {
+	for key := range scopeKeys {
 		featureList = append(featureList, key)
 	}
 	return featureList, err
 }
 
+// GetScopeFeaturesFilterByValue returns all features on the given scope with a certain value.
 func (fdb FlipadelphiaDB) GetScopeFeaturesFilterByValue(scope []byte, value []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
 	scopeKeys, err := fdb.getScopeKeyValuesWithCertainValue(scope, value)
 	if err != nil {
 		return featureList, err
 	}
-	for key, _ := range scopeKeys {
+	for key := range scopeKeys {
 		featureList = append(featureList, key)
 	}
 	return featureList, err
 }
 
+// GetScopes returns all scopes.
 func (fdb FlipadelphiaDB) GetScopes() (Serializable, error) {
 	scopes, err := fdb.getAllScopes()
 	return scopes, err
 }
 
+// GetScopesWithPrefix returns all scopes with a certain prefix.
 func (fdb FlipadelphiaDB) GetScopesWithPrefix(prefix []byte) (Serializable, error) {
 	scopes, err := fdb.getAllScopesWithPrefix(prefix)
 	return scopes, err
 }
 
+// GetScopesWithFeature returns all scopes that have a certain feature set.
 func (fdb FlipadelphiaDB) GetScopesWithFeature(feature []byte) (Serializable, error) {
 	scopes, err := fdb.getAllScopesWithFeature(feature)
 	return scopes, err
 }
 
+// GetFeatures returns a list of all features set on all scopes.
 func (fdb FlipadelphiaDB) GetFeatures() (Serializable, error) {
 	features, err := fdb.getAllFeatures()
 	return features, err
 }
 
+// Serialize returns the FlipadelphiaFeature as json.
 func (feature FlipadelphiaFeature) Serialize() []byte {
 	serializedFeature, err := json.Marshal(feature)
 	if err != nil {
@@ -280,6 +294,7 @@ func (feature FlipadelphiaFeature) Serialize() []byte {
 	return serializedFeature
 }
 
+// Serialize returns the FlipadelphiaScopeFeatures as json.
 func (features FlipadelphiaScopeFeatures) Serialize() []byte {
 	if features == nil {
 		return []byte("[]")
@@ -292,6 +307,7 @@ func (features FlipadelphiaScopeFeatures) Serialize() []byte {
 	return serializedFeatures
 }
 
+// Serialize returns the FlipadelphiaScopeList as json.
 func (scopes FlipadelphiaScopeList) Serialize() []byte {
 	if scopes == nil {
 		return []byte("[]")

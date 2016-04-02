@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 func logErr(err error) {

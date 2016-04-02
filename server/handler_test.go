@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"fmt"
-	"github.com/samdfonseca/flipadelphia/store"
 	"io/ioutil"
 	"strings"
+
+	"github.com/samdfonseca/flipadelphia/store"
 )
 
 func checkResult(actual, target string, t *testing.T) {
@@ -45,7 +46,7 @@ func TestCheckFeatureHandler_ValidRequest_PresetFeature(t *testing.T) {
 			}, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb, AuthSettings{}))
+	server := httptest.NewServer(App(fdb))
 	defer server.Close()
 
 	resp, err := http.Get(getCheckFeatureURL(server.URL, "feature1", "user-1"))
@@ -70,7 +71,7 @@ func TestCheckFeatureHandler_ValidRequest_UnsetFeature(t *testing.T) {
 			}, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb, AuthSettings{}))
+	server := httptest.NewServer(App(fdb))
 	defer server.Close()
 
 	resp, err := http.Get(getCheckFeatureURL(server.URL, "feature1", "user-1"))
@@ -102,12 +103,7 @@ func TestSetFeatureHandler_ValidRequest(t *testing.T) {
 			}, nil
 		},
 	}
-	auth := MockAuth{
-		OnAuthenticateRequest: func(r *http.Request) (bool, error) {
-			return true, nil
-		},
-	}
-	server := httptest.NewServer(App(fdb, auth))
+	server := httptest.NewServer(App(fdb))
 	defer server.Close()
 
 	reqBody := `{"scope":"user-1","value":"on"}`

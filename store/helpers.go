@@ -3,12 +3,12 @@ package store
 import "fmt"
 
 var testFeatures = []FlipadelphiaSetFeatureOptions{
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature1"), []byte("on")},
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature2"), []byte("on")},
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature3"), []byte("off")},
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature4"), []byte("on")},
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature5"), []byte("0")},
-	FlipadelphiaSetFeatureOptions{[]byte("scope1"), []byte("feature6"), []byte("ON")},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature1", "on"},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature2", "on"},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature3", "off"},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature4", "on"},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature5", "0"},
+	FlipadelphiaSetFeatureOptions{"scope1", "feature6", "ON"},
 }
 
 func ValidActivatedFeature(scope, key []byte) (Serializable, error) {
