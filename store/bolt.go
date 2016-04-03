@@ -23,6 +23,9 @@ type FlipadelphiaFeature struct {
 	Data  string `json:"data"`
 }
 
+// FlipadelphiaFeatures is a type alias for []FlipadelphiaFeature
+type FlipadelphiaFeatures []FlipadelphiaFeature
+
 // FlipadelphiaSetFeatureOptions is a helper struct to store the values needed to set a feature.
 type FlipadelphiaSetFeatureOptions struct {
 	Key   string
@@ -107,11 +110,9 @@ func (fdb FlipadelphiaDB) getScopeKeyValues(scope []byte) (map[string][]byte, er
 	keys := make(map[string][]byte)
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		cursor := tx.Bucket([]byte("features")).Cursor()
-		for key, val := cursor.Seek(scope); bytes.HasPrefix(key, scope); key, val = cursor.Next() {
+		for key, val := cursor.Seek(scope); bytes.HasPrefix(append(key, ':'), scope) && key != nil; key, val = cursor.Next() {
 			splits := bytes.SplitN(key, []byte(":"), 2)
-			if bytes.Equal(scope, splits[0]) {
-				keys[string(splits[1])] = val
-			}
+			keys[string(splits[1])] = val
 		}
 		return nil
 	})
@@ -284,6 +285,19 @@ func (fdb FlipadelphiaDB) GetFeatures() (Serializable, error) {
 	return features, err
 }
 
+// GetScopeFeaturesFull returns a list of FlipadelphiaFeature objects for the given scope.
+func (fdb FlipadelphiaDB) GetScopeFeaturesFull(scope []byte) (Serializable, error) {
+	var features FlipadelphiaFeatures
+	keyVals, err := fdb.getScopeKeyValues(scope)
+	if err != nil {
+		return FlipadelphiaFeatures{}, err
+	}
+	for key, val := range keyVals {
+		features = append(features, NewFlipadelphiaFeature([]byte(key), []byte(val)))
+	}
+	return features, nil
+}
+
 // Serialize returns the FlipadelphiaFeature as json.
 func (feature FlipadelphiaFeature) Serialize() []byte {
 	serializedFeature, err := json.Marshal(feature)
@@ -318,4 +332,17 @@ func (scopes FlipadelphiaScopeList) Serialize() []byte {
 		return []byte("")
 	}
 	return serializedScopes
+}
+
+// Serialize returns the []FlipadelphiaFeature as json.
+func (ffs FlipadelphiaFeatures) Serialize() []byte {
+	if ffs == nil {
+		return []byte("[]")
+	}
+	serializedFeatures, err := json.Marshal(ffs)
+	if err != nil {
+		utils.LogOnError(err, "Unable to serialize features", true)
+		return []byte("")
+	}
+	return serializedFeatures
 }

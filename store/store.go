@@ -15,4 +15,5 @@ type PersistenceStore interface {
 	GetScopesWithPrefix([]byte) (Serializable, error)
 	GetScopesWithFeature([]byte) (Serializable, error)
 	GetFeatures() (Serializable, error)
+	GetScopeFeaturesFull([]byte) (Serializable, error)
 }

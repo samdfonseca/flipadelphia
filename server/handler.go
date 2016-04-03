@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -27,7 +28,7 @@ func App(db store.PersistenceStore) http.Handler {
 		Queries("scope", "{scope:[0-9A-Za-z_-]+}")
 
 	router.HandleFunc("/admin/features/{feature_name}", setFeatureHandler(db)).
-		Methods("PUT", "POST")
+		Methods("POST")
 	router.HandleFunc("/admin/scopes", getScopesWithPrefixHandler(db)).
 		Methods("GET").
 		Queries("prefix", "{prefix:[0-9A-Za-z_-]+}")
@@ -38,8 +39,22 @@ func App(db store.PersistenceStore) http.Handler {
 		Methods("GET")
 	router.HandleFunc("/admin/features", getAllFeaturesHandler(db)).
 		Methods("GET")
+	router.HandleFunc("/admin/scopes/{scope:[0-9A-Za-z_-]+}/features", getScopeFeaturesFullHandler(db)).
+		Methods("GET")
+
+	router.HandleFunc("/features", allowCORSHandler("GET", "OPTIONS")).
+		Methods("OPTIONS")
+	router.HandleFunc("/features/{feature_name}", allowCORSHandler("GET", "OPTIONS")).
+		Methods("OPTIONS")
+	router.HandleFunc("/admin/features/{feature_name}", allowCORSHandler("POST", "OPTIONS")).
+		Methods("OPTIONS")
+	router.HandleFunc("/admin/scopes", allowCORSHandler("GET", "OPTIONS")).
+		Methods("OPTIONS")
+	router.HandleFunc("/admin/features", allowCORSHandler("GET", "OPTIONS")).
+		Methods("OPTIONS")
 
 	n := negroni.Classic()
+	n.UseFunc(allowCORSOnRequestOrigin)
 	n.UseHandler(router)
 	return n
 }
@@ -48,9 +63,22 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("flipadelphia flips your features"))
 }
 
+func allowCORSOnRequestOrigin(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+	next(w, r)
+}
+
 // Handler for GET to "/features/{feature_name}?scope=..."
 func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 1 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		vars := mux.Vars(r)
 		scope := r.FormValue("scope")
 		utils.Output(fmt.Sprintf("Scope: %q", scope))
@@ -68,6 +96,12 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/features?scope=..."
 func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 1 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		scope := r.FormValue("scope")
 		defer r.Body.Close()
 		features, err := db.GetScopeFeatures([]byte(scope))
@@ -83,6 +117,12 @@ func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/features?scope=...&value=..."
 func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 2 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		scope := r.FormValue("scope")
 		value := r.FormValue("value")
 		defer r.Body.Close()
@@ -102,7 +142,6 @@ func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		vars := mux.Vars(r)
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
-		utils.Output(string(body))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error reading request body"))
@@ -131,6 +170,12 @@ func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/admin/scopes"
 func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 0 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		scopes, err := db.GetScopes()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -145,6 +190,12 @@ func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/admin/scopes?prefix=..."
 func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(r.Form) != 1 {
+			r.Form.Del("prefix")
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		vars := mux.Vars(r)
 		prefix := vars["prefix"]
 		scopes, err := db.GetScopesWithPrefix([]byte(prefix))
@@ -161,6 +212,13 @@ func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/admin/scopes?feature=..."
 func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 1 {
+			r.Form.Del("feature")
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		vars := mux.Vars(r)
 		feature := vars["feature"]
 		scopes, err := db.GetScopesWithFeature([]byte(feature))
@@ -177,6 +235,12 @@ func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 // Handler for GET to "/admin/features"
 func getAllFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 0 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
 		features, err := db.GetFeatures()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -185,5 +249,38 @@ func getAllFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 			w.WriteHeader(http.StatusOK)
 			w.Write(features.Serialize())
 		}
+	})
+}
+
+// Handler for GET to "/admin/scopes/{scope}/features"
+func getScopeFeaturesFullHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 0 {
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
+		vars := mux.Vars(r)
+		features, err := db.GetScopeFeaturesFull([]byte(vars["scope"]))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(features.Serialize())
+		}
+	})
+}
+
+// Handler for OPTIONS on all endpoints
+func allowCORSHandler(allowMethods ...string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(allowMethods) == 0 {
+			allowMethods = append(allowMethods, "GET", "OPTIONS", "POST")
+		}
+		methods := strings.Join(allowMethods, ", ")
+		w.Header().Set("Access-Control-Allow-Methods", methods)
+		return
 	})
 }
