@@ -1,5 +1,6 @@
 flipadelphia
 vendor/
+*.db
 
 # IntelliJ stuff
 .idea/
