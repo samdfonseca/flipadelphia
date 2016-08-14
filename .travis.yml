@@ -2,7 +2,7 @@ language: go
 go: 1.6
 env:
 - FLIPADELPHIA_ENV=test
-script: make deps; make test; make build
+script: go get; make test; make build
 deploy:
   provider: releases
   api_key:

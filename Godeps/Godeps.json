@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/samdfonseca/flipadelphia",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v74",
+	"Packages": [
+		"github.com/samdfonseca/flipadelphia"
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/boltdb/bolt",
@@ -25,10 +28,6 @@
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-colorable",
-			"Rev": "4af63d73f5bea08b682ad2cd198b1e607afd6be0"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-isatty",
