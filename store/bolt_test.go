@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"os"
 	"os/exec"
 	"sort"
 	"testing"
@@ -18,7 +19,11 @@ var (
 )
 
 func init() {
-	TestConfig = config.NewFlipadelphiaConfig("config.json", "test")
+	cfg := os.Getenv("FLIPADELPHIA_CONFIG")
+	if cfg == "" {
+		cfg = "config.json"
+	}
+	TestConfig = config.NewFlipadelphiaConfig(cfg, "test")
 	_ = exec.Command("touch", TestConfig.DBFile).Run()
 	_ = exec.Command("rm", TestConfig.DBFile).Run()
 }

@@ -2,6 +2,7 @@ language: go
 go: 1.6
 env:
 - FLIPADELPHIA_ENV=test
+- FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
 script: go get; make test; make build
 deploy:
   provider: releases
