@@ -1,22 +1,12 @@
 {
 	"ImportPath": "github.com/samdfonseca/flipadelphia",
 	"GoVersion": "go1.6",
-	"Packages": [
-		"./config",
-		"./server",
-		"./store",
-		"./utils"
-	],
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "github.com/boltdb/bolt",
 			"Comment": "v1.1.0-75-ga5ebf41",
 			"Rev": "a5ebf41fd5bcd729b2ec2107ad35bbc7b67da4c0"
-		},
-		{
-			"ImportPath": "github.com/codegangsta/cli",
-			"Comment": "1.2.0-219-ga294348",
-			"Rev": "a2943485b110df8842045ae0600047f88a3a56a1"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/negroni",
@@ -43,6 +33,11 @@
 		{
 			"ImportPath": "github.com/mattn/go-isatty",
 			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
+		},
+		{
+			"ImportPath": "github.com/urfave/cli",
+			"Comment": "v1.18.0-37-gd9021fa",
+			"Rev": "d9021faab69f92295ef7061bd39e4a76dcbdef32"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",

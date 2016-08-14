@@ -6,14 +6,21 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
-	"github.com/codegangsta/cli"
 	"github.com/samdfonseca/flipadelphia/config"
 	"github.com/samdfonseca/flipadelphia/server"
 	"github.com/samdfonseca/flipadelphia/store"
 	"github.com/samdfonseca/flipadelphia/utils"
+	"github.com/urfave/cli"
 )
 
-var flipadelphiaVersion = "dev-build"
+var flipadelphiaVersion string
+
+func init() {
+	flipadelphiaVersion = "dev-build"
+	if v := os.Getenv("FLIPADELPHIA_BUILD_VERSION"); v != "" {
+		flipadelphiaVersion = v
+	}
+}
 
 func main() {
 	app := cli.NewApp()
