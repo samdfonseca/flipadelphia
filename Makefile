@@ -31,6 +31,7 @@ test:
 	- go test -v ./config
 	- go test -v ./store
 	- go test -v ./server
+	- go test -v ./cmd/flippy
 
 debug:
 	go build && dlv exec ./flipadelphia s
