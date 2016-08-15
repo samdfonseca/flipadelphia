@@ -59,6 +59,16 @@ func App(db store.PersistenceStore) http.Handler {
 	return n
 }
 
+func WriteResponseBody(s store.Serializable, w http.ResponseWriter) {
+	body, err := json.Marshal(map[string]store.Serializable{"data": s})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("flipadelphia flips your features"))
 }
@@ -86,10 +96,9 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		feature, err := db.Get([]byte(scope), []byte(feature_name))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(feature.Serialize())
+			return
 		}
+		WriteResponseBody(feature, w)
 	})
 }
 
@@ -107,10 +116,9 @@ func checkAllScopeFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 		features, err := db.GetScopeFeatures([]byte(scope))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(features.Serialize())
+			return
 		}
+		WriteResponseBody(features, w)
 	})
 }
 
@@ -129,10 +137,9 @@ func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFu
 		features, err := db.GetScopeFeaturesFilterByValue([]byte(scope), []byte(value))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(features.Serialize())
+			return
 		}
+		WriteResponseBody(features, w)
 	})
 }
 
@@ -159,11 +166,10 @@ func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		_, err = db.Set([]byte(setFeatureOptions.Scope), []byte(setFeatureOptions.Key), []byte(setFeatureOptions.Value))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			feature, _ := db.Get([]byte(setFeatureOptions.Scope), []byte(setFeatureOptions.Key))
-			w.WriteHeader(http.StatusOK)
-			w.Write(feature.Serialize())
+			return
 		}
+		feature, _ := db.Get([]byte(setFeatureOptions.Scope), []byte(setFeatureOptions.Key))
+		WriteResponseBody(feature, w)
 	})
 }
 
@@ -180,10 +186,9 @@ func getScopesHandler(db store.PersistenceStore) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(scopes.Serialize())
+			return
 		}
+		WriteResponseBody(scopes, w)
 	})
 }
 
@@ -202,10 +207,9 @@ func getScopesWithPrefixHandler(db store.PersistenceStore) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(scopes.Serialize())
+			return
 		}
+		WriteResponseBody(scopes, w)
 	})
 }
 
@@ -225,10 +229,9 @@ func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(scopes.Serialize())
+			return
 		}
+		WriteResponseBody(scopes, w)
 	})
 }
 
@@ -245,10 +248,9 @@ func getAllFeaturesHandler(db store.PersistenceStore) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(features.Serialize())
+			return
 		}
+		WriteResponseBody(features, w)
 	})
 }
 
@@ -266,10 +268,9 @@ func getScopeFeaturesFullHandler(db store.PersistenceStore) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(features.Serialize())
+			return
 		}
+		WriteResponseBody(features, w)
 	})
 }
 
