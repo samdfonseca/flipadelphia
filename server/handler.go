@@ -55,6 +55,7 @@ func App(db store.PersistenceStore) http.Handler {
 
 	n := negroni.Classic()
 	n.UseFunc(allowCORSOnRequestOrigin)
+	n.UseFunc(responseContentTypeJson)
 	n.UseHandler(router)
 	return n
 }
@@ -71,6 +72,11 @@ func WriteResponseBody(s store.Serializable, w http.ResponseWriter) {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("flipadelphia flips your features"))
+}
+
+func responseContentTypeJson(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	next(w, r)
 }
 
 func allowCORSOnRequestOrigin(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

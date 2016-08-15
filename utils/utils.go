@@ -18,10 +18,13 @@ func exitErr(err error) {
 	os.Exit(1)
 }
 
-func Output(s string) {
+func Output(s string, appName ...string) {
 	bold := color.New(color.Bold).SprintFunc()
 	green := color.New(color.FgGreen).SprintfFunc()
-	fmt.Printf("%s: %s\n", green(bold("flipadelphia")), s)
+	if len(appName) == 0 {
+		appName = append(appName, "flipadelphia")
+	}
+	fmt.Printf("%s: %s\n", green(bold(appName[0])), s)
 }
 
 func LogOnError(err error, msg string, appendErr ...bool) {

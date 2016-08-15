@@ -57,7 +57,7 @@ func TestCheckFeatureHandler_ValidRequest_PresetFeature(t *testing.T) {
 		t.Error(err)
 	}
 
-	target := `{"name":"feature1","value":"on","data":"true"}`
+	target := `{"data":{"name":"feature1","value":"on","data":"true"}}`
 	checkResult(string(body), target, t)
 }
 
@@ -82,7 +82,7 @@ func TestCheckFeatureHandler_ValidRequest_UnsetFeature(t *testing.T) {
 		t.Error(err)
 	}
 
-	target := `{"name":"feature1","value":"","data":"false"}`
+	target := `{"data":{"name":"feature1","value":"","data":"false"}}`
 	checkResult(string(body), target, t)
 }
 
@@ -115,6 +115,6 @@ func TestSetFeatureHandler_ValidRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	target := `{"name":"feature1","value":"on","data":"true"}`
+	target := `{"data":{"name":"feature1","value":"on","data":"true"}}`
 	checkResult(string(body), target, t)
 }

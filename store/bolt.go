@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"fmt"
+	"sort"
 
 	"encoding/json"
 
@@ -201,7 +202,18 @@ func (fdb FlipadelphiaDB) getAllFeatures() (FlipadelphiaScopeFeatures, error) {
 		})
 		return nil
 	})
-	return features, err
+	sort.Strings(features)
+	var uniqueFeatures FlipadelphiaScopeFeatures
+	for i := range features {
+		if i < len(features)-1 {
+			if features[i] != features[i+1] {
+				uniqueFeatures = append(uniqueFeatures, features[i])
+			}
+		} else {
+			uniqueFeatures = append(uniqueFeatures, features[i])
+		}
+	}
+	return uniqueFeatures, err
 }
 
 // Set stores the feature in the database and returns an instance of FlipadelphiaFeature.
