@@ -57,22 +57,38 @@ func TestParseConfigFile(t *testing.T) {
 	targetAuthHeader := "X-SESSION-TOKEN"
 	targetAuthMethod := "GET"
 	targetAuthSuccessStatusCode := "200"
+	targetPersistenceStoreType := "bolt"
 	targetDBFile := getFullFilePath("test.db")
+	targetRedisHost := "localhost"
+	targetRedisPassword := ""
 	targetPort := "3006"
 	content := []byte(fmt.Sprintf(`{"test": {
     "auth_url": %q,
     "auth_header": %q,
     "auth_method": %q,
     "auth_success_status_code": %q,
+	"persistence_store_type": %q,
     "db_file": %q,
-    "port": %q}}`, targetAuthUrl, targetAuthHeader, targetAuthMethod, targetAuthSuccessStatusCode, targetDBFile, targetPort))
+	"redis_host": %q,
+	"redis_password": %q,
+    "port": %q}}`,
+		targetAuthUrl,
+		targetAuthHeader,
+		targetAuthMethod,
+		targetAuthSuccessStatusCode,
+		targetPersistenceStoreType,
+		targetDBFile,
+		targetPort))
 	parsedContent := parseConfigFile(content)
 	configData := parsedContent["test"]
 	checkResult(configData.AuthRequestURL, targetAuthUrl, t)
 	checkResult(configData.AuthRequestHeader, targetAuthHeader, t)
 	checkResult(configData.AuthRequestMethod, targetAuthMethod, t)
 	checkResult(configData.AuthRequestSuccessStatusCode, targetAuthSuccessStatusCode, t)
+	checkResult(configData.PersistenceStoreType, targetPersistenceStoreType, t)
 	checkResult(configData.DBFile, targetDBFile, t)
+	checkResult(configData.RedisHost, targetRedisHost, t)
+	checkResult(configData.RedisPassword, targetRedisPassword, t)
 	checkResult(configData.ListenOnPort, targetPort, t)
 }
 
@@ -81,6 +97,7 @@ func TestGetRuntimeEnv(t *testing.T) {
 	targetAuthHeader := "X-SESSION-TOKEN"
 	targetAuthMethod := "GET"
 	targetAuthSuccessStatusCode := "200"
+	targetPersistenceStoreType := "bolt"
 	targetDBFile := getFullFilePath("test.db")
 	targetPort := "3006"
 	content := []byte(fmt.Sprintf(`{"test": {
@@ -88,8 +105,16 @@ func TestGetRuntimeEnv(t *testing.T) {
     "auth_header": %q,
     "auth_method": %q,
     "auth_success_status_code": %q,
+	"persistence_store_type": %q,
     "db_file": %q,
-    "port": %q}}`, targetAuthUrl, targetAuthHeader, targetAuthMethod, targetAuthSuccessStatusCode, targetDBFile, targetPort))
+    "port": %q}}`,
+		targetAuthUrl,
+		targetAuthHeader,
+		targetAuthMethod,
+		targetAuthSuccessStatusCode,
+		targetPersistenceStoreType,
+		targetDBFile,
+		targetPort))
 	tmpfile, err := ioutil.TempFile("", "flipadelphia")
 	if err != nil {
 		t.Fatal(err)

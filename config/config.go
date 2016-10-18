@@ -17,7 +17,11 @@ type FlipadelphiaConfig struct {
 	AuthRequestHeader            string `json:"auth_header"`
 	AuthRequestMethod            string `json:"auth_method"`
 	AuthRequestSuccessStatusCode string `json:"auth_success_status_code"`
+	PersistenceStoreType         string `json:"persistence_store_type"`
 	DBFile                       string `json:"db_file"`
+	RedisHost                    string `json:"redis_host"`
+	RedisPassword                string `json:"redis_password"`
+	RedisDB                      int    `json:"redis_db"`
 	ListenOnPort                 string `json:"port"`
 }
 

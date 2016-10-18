@@ -149,7 +149,7 @@ func checkScopeFeaturesForValueHandler(db store.PersistenceStore) http.HandlerFu
 	})
 }
 
-// Handler for "/admin/features/{feature_name}"
+// Handler for POST to "/admin/features/{feature_name}"
 func setFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

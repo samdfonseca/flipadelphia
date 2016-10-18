@@ -4,12 +4,17 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_dev.db",
+    "redis_host": "localhost:6379",
     "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
   "noauth": {
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_dev.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
@@ -18,7 +23,10 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_local.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_local.log",
     "port": "3006"
   },
@@ -27,12 +35,18 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_test.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_test.log",
     "port": "3006"
   },
   "test_noauth": {
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_test.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_test.log",
     "port": "3006"
   },
@@ -41,7 +55,10 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_int.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_int.log",
     "port": "3006"
   },
@@ -50,7 +67,10 @@
     "auth_header": "X-SESSION-TOKEN",
     "auth_method": "GET",
     "auth_success_status_code": "200",
+    "persistence_store_type": "bolt",
     "db_file": "flipadelphia_prod.db",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
     "log_file": "flipadelphia_prod.log",
     "port": "3006"
   }

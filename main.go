@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/boltdb/bolt"
 	"github.com/samdfonseca/flipadelphia/config"
 	"github.com/samdfonseca/flipadelphia/server"
 	"github.com/samdfonseca/flipadelphia/store"
@@ -43,12 +42,10 @@ func main() {
 	}
 	app.Action = func(c *cli.Context) {
 		config.Config = config.NewFlipadelphiaConfig(c.String("config"), c.String("env"))
-		db, err := bolt.Open(config.Config.DBFile, 0600, nil)
-		utils.FailOnError(err, "Unable to open db file", true)
-		defer db.Close()
-		flipDB := store.NewFlipadelphiaDB(db)
+		flipDB := store.NewPersistenceStore(config.Config)
+		defer flipDB.Close()
 		utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
-		err = http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
 		utils.FailOnError(err, "Something went wrong", true)
 	}
 

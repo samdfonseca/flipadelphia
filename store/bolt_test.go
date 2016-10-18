@@ -15,7 +15,7 @@ import (
 
 var (
 	TestConfig config.FlipadelphiaConfig
-	TestDB     FlipadelphiaDB
+	TestDB     FlipadelphiaBoltDB
 )
 
 func init() {
@@ -34,7 +34,7 @@ func InitTestDB() {
 		tx.DeleteBucket([]byte("features"))
 		return nil
 	})
-	TestDB = NewFlipadelphiaDB(testDB)
+	TestDB = NewFlipadelphiaBoltDB(testDB)
 }
 
 func sortFeatures(features Serializable) FlipadelphiaScopeFeatures {
@@ -132,7 +132,7 @@ func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
 }
 
 func TestMergeScopeKeyBothValid(t *testing.T) {
-	actual, err := MergeScopeKey([]byte("user-1"), []byte("feature1"))
+	actual, err := mergeScopeKey([]byte("user-1"), []byte("feature1"))
 	target := `user-1:feature1`
 	if err != nil {
 		t.Errorf("Error merging scope and key: %s", err)
@@ -141,7 +141,7 @@ func TestMergeScopeKeyBothValid(t *testing.T) {
 }
 
 func TestMergeScopeKeyInvalidScope(t *testing.T) {
-	_, err := MergeScopeKey([]byte("user:1"), []byte("feature1"))
+	_, err := mergeScopeKey([]byte("user:1"), []byte("feature1"))
 	if err == nil {
 		t.Errorf("Invalid scope did not cause error: %s", err)
 	}
@@ -150,7 +150,7 @@ func TestMergeScopeKeyInvalidScope(t *testing.T) {
 }
 
 func TestMergeScopeKeyInvalidKey(t *testing.T) {
-	_, err := MergeScopeKey([]byte("user-1"), []byte("feature,1"))
+	_, err := mergeScopeKey([]byte("user-1"), []byte("feature,1"))
 	if err == nil {
 		t.Errorf("Invalid key did not cause error: %s", err)
 	}
@@ -159,14 +159,14 @@ func TestMergeScopeKeyInvalidKey(t *testing.T) {
 }
 
 func TestSplitScopeKeyValidScopeKey(t *testing.T) {
-	actualScope, actualKey, err := SplitScopeKey([]byte("user-1:feature1"))
+	actualScope, actualKey, err := splitScopeKey([]byte("user-1:feature1"))
 	assertNil(err, t)
 	assertEqual(string(actualScope), "user-1", t)
 	assertEqual(string(actualKey), "feature1", t)
 }
 
 func TestSplitScopeKeyInvalidMissingColon(t *testing.T) {
-	_, _, err := SplitScopeKey([]byte("user-1 feature1"))
+	_, _, err := splitScopeKey([]byte("user-1 feature1"))
 	target := fmt.Errorf(`ScopeKey missing ":" character`)
 	assertErrorEqual(err, target, t)
 }
