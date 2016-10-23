@@ -78,6 +78,8 @@ func TestParseConfigFile(t *testing.T) {
 		targetAuthSuccessStatusCode,
 		targetPersistenceStoreType,
 		targetDBFile,
+		targetRedisHost,
+		targetRedisPassword,
 		targetPort))
 	parsedContent := parseConfigFile(content)
 	configData := parsedContent["test"]
