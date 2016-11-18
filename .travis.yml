@@ -3,7 +3,7 @@ go: 1.7
 env:
 - FLIPADELPHIA_ENV=test
 - FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
-script: go get; make test; make build
+script: go get; make deps; make test; make build
 deploy:
   provider: releases
   api_key:
