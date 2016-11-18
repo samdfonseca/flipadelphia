@@ -28,10 +28,7 @@ install:
 	mv flipadelphia /usr/bin/
 
 test:
-	- go test -v ./config
-	- go test -v ./store
-	- go test -v ./server
-	- go test -v ./cmd/flippy
+	- go test -v ./{config,store,server,cmd/flippy}
 
 debug:
 	go build && dlv exec ./flipadelphia s

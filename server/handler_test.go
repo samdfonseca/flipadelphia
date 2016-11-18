@@ -142,3 +142,7 @@ func TestGetScopesPaginatedWithoutOffset_ValidRequest(t *testing.T) {
 
 	checkResult(string(body), fmt.Sprintf(`{"data":%s}`, string(testScopes.Serialize())), t)
 }
+
+func TestTravisFail(t *testing.T) {
+	t.Errorf("should cause travis build to fail")
+}

@@ -1,90 +1,34 @@
 {
   "development": {
-    "auth_url": "http://localhost:3005/session",
-    "auth_header": "X-SESSION-TOKEN",
-    "auth_method": "GET",
-    "auth_success_status_code": "200",
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_dev.db",
-    "redis_host": "localhost:6379",
     "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
   "redis": {
-      "persistence_store_type": "redis",
-      "redis_host": "localhost:6379",
-      "redis_password": "",
-      "redis_db": 0,
-      "port": "3006"
+    "persistence_store_type": "redis",
+    "redis_host": "localhost:6379",
+    "redis_password": "",
+    "redis_db": 0,
+    "port": "3006"
   },
   "redisv2": {
-      "persistence_store_type": "redisv2",
-      "redis_host": "localhost:6379",
-      "redis_password": "",
-      "port": "3006"
-  },
-  "noauth": {
-    "persistence_store_type": "bolt",
-    "db_file": "flipadelphia_dev.db",
+    "persistence_store_type": "redisv2",
     "redis_host": "localhost:6379",
     "redis_password": "",
-    "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
-  "local": {
-    "auth_url": "http://localhost:3005/session",
-    "auth_header": "X-SESSION-TOKEN",
-    "auth_method": "GET",
-    "auth_success_status_code": "200",
-    "persistence_store_type": "bolt",
-    "db_file": "flipadelphia_local.db",
-    "redis_host": "localhost:6379",
-    "redis_password": "",
-    "log_file": "flipadelphia_local.log",
-    "port": "3006"
-  },
-  "test": {
-    "auth_url": "http://localhost:3005/session",
-    "auth_header": "X-SESSION-TOKEN",
-    "auth_method": "GET",
-    "auth_success_status_code": "200",
+  "bolt_test": {
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_test.db",
-    "redis_host": "localhost:6379",
-    "redis_password": "",
     "log_file": "flipadelphia_test.log",
     "port": "3006"
   },
-  "test_noauth": {
-    "persistence_store_type": "bolt",
-    "db_file": "flipadelphia_test.db",
+  "redis_test": {
+    "persistence_store_type": "redis",
     "redis_host": "localhost:6379",
     "redis_password": "",
-    "log_file": "flipadelphia_test.log",
-    "port": "3006"
-  },
-  "integration": {
-    "auth_url": "http://localhost:3005/session",
-    "auth_header": "X-SESSION-TOKEN",
-    "auth_method": "GET",
-    "auth_success_status_code": "200",
-    "persistence_store_type": "bolt",
-    "db_file": "flipadelphia_int.db",
-    "redis_host": "localhost:6379",
-    "redis_password": "",
-    "log_file": "flipadelphia_int.log",
-    "port": "3006"
-  },
-  "production": {
-    "auth_url": "http://localhost:3005/session",
-    "auth_header": "X-SESSION-TOKEN",
-    "auth_method": "GET",
-    "auth_success_status_code": "200",
-    "persistence_store_type": "bolt",
-    "db_file": "flipadelphia_prod.db",
-    "redis_host": "localhost:6379",
-    "redis_password": "",
-    "log_file": "flipadelphia_prod.log",
+    "redis_db": 0,
     "port": "3006"
   }
 }
