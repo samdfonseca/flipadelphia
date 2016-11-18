@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/samdfonseca/flipadelphia/store"
+	"github.com/codegangsta/negroni"
 )
 
 func checkResult(actual, target string, t *testing.T) {
@@ -46,7 +47,7 @@ func TestCheckFeatureHandler_ValidRequest_PresetFeature(t *testing.T) {
 			}, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb))
+	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
 
 	resp, err := http.Get(getCheckFeatureURL(server.URL, "feature1", "user-1"))
@@ -71,7 +72,7 @@ func TestCheckFeatureHandler_ValidRequest_UnsetFeature(t *testing.T) {
 			}, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb))
+	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
 
 	resp, err := http.Get(getCheckFeatureURL(server.URL, "feature1", "user-1"))
@@ -103,7 +104,7 @@ func TestSetFeatureHandler_ValidRequest(t *testing.T) {
 			}, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb))
+	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
 
 	reqBody := `{"scope":"user-1","value":"on"}`
@@ -126,7 +127,7 @@ func TestGetScopesPaginatedWithoutOffset_ValidRequest(t *testing.T) {
 			return testScopes, nil
 		},
 	}
-	server := httptest.NewServer(App(fdb))
+	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
 
 	resp, err := http.Get(fmt.Sprintf("%s/admin/scopes?count=5", server.URL))
@@ -141,8 +142,4 @@ func TestGetScopesPaginatedWithoutOffset_ValidRequest(t *testing.T) {
 	}
 
 	checkResult(string(body), fmt.Sprintf(`{"data":%s}`, string(testScopes.Serialize())), t)
-}
-
-func TestTravisFail(t *testing.T) {
-	t.Errorf("should cause travis build to fail")
 }

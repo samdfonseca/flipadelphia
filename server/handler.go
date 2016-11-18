@@ -14,7 +14,11 @@ import (
 	"github.com/samdfonseca/flipadelphia/utils"
 )
 
-func App(db store.PersistenceStore) http.Handler {
+func ClassicNegroniStack() *negroni.Negroni {
+	return negroni.Classic()
+}
+
+func App(db store.PersistenceStore, n *negroni.Negroni) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
 
@@ -60,7 +64,6 @@ func App(db store.PersistenceStore) http.Handler {
 	router.HandleFunc("/admin/features", allowCORSHandler("GET", "OPTIONS")).
 		Methods("OPTIONS")
 
-	n := negroni.Classic()
 	n.UseFunc(allowCORSOnRequestOrigin)
 	n.UseFunc(responseContentTypeJson)
 	n.UseHandler(router)
@@ -104,7 +107,6 @@ func checkFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		}
 		vars := mux.Vars(r)
 		scope := r.FormValue("scope")
-		utils.Output(fmt.Sprintf("Scope: %q", scope))
 		feature_name := vars["feature_name"]
 		feature, err := db.Get([]byte(scope), []byte(feature_name))
 		if err != nil {

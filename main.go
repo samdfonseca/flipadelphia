@@ -45,7 +45,8 @@ func main() {
 		flipDB := store.NewPersistenceStore(config.Config)
 		defer flipDB.Close()
 		utils.Output(fmt.Sprintf("Listening on port %s", config.Config.ListenOnPort))
-		err := http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort), server.App(flipDB))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", config.Config.ListenOnPort),
+			server.App(flipDB, server.ClassicNegroniStack()))
 		utils.FailOnError(err, "Something went wrong", true)
 	}
 
