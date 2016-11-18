@@ -2,7 +2,7 @@ language: go
 go: 1.7
 env:
 - FLIPADELPHIA_ENV=test
-- FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
+  FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
 before_install:
 - GLIDE_OS_ARCH=`go env GOHOSTOS`-`go env GOHOSTARCH`
 - GLIDE_TAG=$(curl -s https://glide.sh/version)
@@ -11,6 +11,8 @@ before_install:
 - mkdir /tmp/glide
 - tar --directory=/tmp/glide -xvf /tmp/glide.tar.gz
 - export PATH=$PATH:/tmp/glide/${GLIDE_OS_ARCH}
+- mkdir -p $HOME/.flipadelphia
+- cp ./config/config.example.json $HOME/.flipadelphia/config.json
 before_script:
 - glide install
 script:
