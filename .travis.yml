@@ -16,8 +16,8 @@ before_install:
 before_script:
 - glide install
 script:
-- make test
-- make build
+- go test -v ./{cmd/flippy,config,server,store}
+- go build -v
 deploy:
   provider: releases
   api_key:
