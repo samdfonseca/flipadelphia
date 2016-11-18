@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/fatih/color"
 )
@@ -14,8 +13,7 @@ func logErr(err error) {
 }
 
 func exitErr(err error) {
-	logErr(err)
-	os.Exit(1)
+	panic(err)
 }
 
 func Output(s string, appName ...string) {

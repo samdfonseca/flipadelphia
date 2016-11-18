@@ -21,7 +21,7 @@ func createBucket(db *bolt.DB, bucketName []byte) error {
 		return err
 	})
 	createLog := fmt.Sprintf("CREATE BUCKET - Name: %q", bucketName)
-	utils.LogEither(err, fmt.Sprint(createLog), fmt.Sprint(createLog), true)
+	utils.LogOnError(err, fmt.Sprint(createLog), true)
 	return err
 }
 
