@@ -29,7 +29,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "env, e",
-			Value:  "development",
+			Value:  "bolt",
 			Usage:  "An environment from the config.json file to use",
 			EnvVar: "FLIPADELPHIA_ENV",
 		},

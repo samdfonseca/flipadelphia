@@ -1,5 +1,5 @@
 {
-  "development": {
+  "bolt": {
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_dev.db",
     "log_file": "flipadelphia_dev.log",
