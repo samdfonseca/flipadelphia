@@ -8,8 +8,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/antonholmquist/jason",
-			"Comment": "v1.0.0-14-g4238031",
-			"Rev": "423803175a265e07c3f35cd8faf009eac345efb8"
+			"Comment": "v1.0.0-16-g962e09b",
+			"Rev": "962e09b85496e2e158eec1567fb4c826ce3d55d1"
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",

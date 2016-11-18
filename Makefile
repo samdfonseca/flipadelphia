@@ -1,7 +1,7 @@
 default: build
 
 deps:
-	godep save
+	godep save ./...
 
 build:
 	go build
