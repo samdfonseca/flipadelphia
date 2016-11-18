@@ -50,6 +50,7 @@ func NewFlipadelphiaBoltDB(db *bolt.DB) FlipadelphiaBoltDB {
 // mergeScopeKey joins two []byte around the ":" character.
 func mergeScopeKey(scope, key []byte) ([]byte, error) {
 	if bytes.Contains(scope, []byte(":")) {
+		//noinspection GoPlaceholderCount
 		return []byte{}, fmt.Errorf("Invalid scope: Can not contain ':' character")
 	}
 	for _, b := range key {
@@ -63,11 +64,22 @@ func mergeScopeKey(scope, key []byte) ([]byte, error) {
 // splitScopeKey splits a []byte on the first ":" character.
 func splitScopeKey(scopeKey []byte) ([]byte, []byte, error) {
 	if !bytes.Contains(scopeKey, []byte(":")) {
+		//noinspection GoPlaceholderCount
 		err := fmt.Errorf(`ScopeKey missing ":" character`)
 		return []byte{}, []byte{}, err
 	}
 	splits := bytes.SplitN(scopeKey, []byte(":"), 2)
 	return splits[0], splits[1], nil
+}
+
+func mustGetScopeFromScopeKey(scopeKey []byte) []byte {
+	scope, _, _ := splitScopeKey(scopeKey)
+	return scope
+}
+
+func mustGetKeyFromScopeKey(scopeKey []byte) []byte {
+	_, key, _ := splitScopeKey(scopeKey)
+	return key
 }
 
 func (fdb FlipadelphiaBoltDB) Close() error {
@@ -105,9 +117,11 @@ func (fdb FlipadelphiaBoltDB) getScopeKeyValuesWithCertainValue(scope []byte, ta
 
 func (fdb FlipadelphiaBoltDB) getAllScopes() (FlipadelphiaScopeList, error) {
 	var scopes FlipadelphiaScopeList
+
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("features"))
 		var previousScope []byte
+
+		bucket := tx.Bucket([]byte("features"))
 		bucket.ForEach(func(key, val []byte) error {
 			scope, _, err := splitScopeKey(key)
 			if err == nil && !bytes.Equal(scope, previousScope) {
@@ -123,9 +137,11 @@ func (fdb FlipadelphiaBoltDB) getAllScopes() (FlipadelphiaScopeList, error) {
 
 func (fdb FlipadelphiaBoltDB) getAllScopesWithPrefix(prefix []byte) (FlipadelphiaScopeList, error) {
 	var scopes FlipadelphiaScopeList
+
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		cursor := tx.Bucket([]byte("features")).Cursor()
 		var previousScope []byte
+
+		cursor := tx.Bucket([]byte("features")).Cursor()
 		for key, _ := cursor.Seek(prefix); bytes.HasPrefix(key, prefix); key, _ = cursor.Next() {
 			scope, _, err := splitScopeKey(key)
 			if err == nil && !bytes.Equal(scope, previousScope) {
@@ -138,8 +154,41 @@ func (fdb FlipadelphiaBoltDB) getAllScopesWithPrefix(prefix []byte) (Flipadelphi
 	return scopes, err
 }
 
+func (fdb FlipadelphiaBoltDB) getScopesPaginated(offset, count int) (StringSlice, error) {
+	var scopes StringSlice
+
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		var previousScope []byte
+
+		cursor := tx.Bucket([]byte("features")).Cursor()
+		key, _ := cursor.First()
+		if key != nil {
+			previousScope = mustGetScopeFromScopeKey(key)
+		}
+		for counter := 0; key != nil && offset != 0 && counter < offset; key, _ = cursor.Next() {
+			scope, _, _ := splitScopeKey(key)
+			for bytes.Equal(previousScope, scope) {
+				key, _ = cursor.Next()
+				scope = mustGetScopeFromScopeKey(key)
+			}
+			previousScope = scope
+			counter++
+		}
+		for key != nil && len(scopes) < count {
+			scope, _, _ := splitScopeKey(key)
+			if len(scopes) == 0 || !bytes.Equal(scope, []byte(scopes[len(scopes)-1])) {
+				scopes = append(scopes, string(scope))
+			}
+			key, _ = cursor.Next()
+		}
+		return nil
+	})
+	return scopes, err
+}
+
 func (fdb FlipadelphiaBoltDB) getAllScopesWithFeature(feature []byte) (FlipadelphiaScopeList, error) {
 	var scopes FlipadelphiaScopeList
+
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("features"))
 		bucket.ForEach(func(scopeKey, val []byte) error {
@@ -156,9 +205,11 @@ func (fdb FlipadelphiaBoltDB) getAllScopesWithFeature(feature []byte) (Flipadelp
 
 func (fdb FlipadelphiaBoltDB) getAllFeatures() (FlipadelphiaScopeFeatures, error) {
 	var features FlipadelphiaScopeFeatures
+
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("features"))
 		var previousFeature []byte
+
+		bucket := tx.Bucket([]byte("features"))
 		bucket.ForEach(func(key, val []byte) error {
 			_, feature, err := splitScopeKey(key)
 			if err == nil && !bytes.Equal(feature, previousFeature) {
@@ -204,6 +255,7 @@ func (fdb FlipadelphiaBoltDB) Set(scope []byte, key []byte, value []byte) (Seria
 func (fdb FlipadelphiaBoltDB) Get(scope []byte, key []byte) (Serializable, error) {
 	var value []byte
 	var resultBuffer bytes.Buffer
+
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("features"))
 		mergedScopeKey, err := mergeScopeKey(scope, key)
@@ -220,6 +272,7 @@ func (fdb FlipadelphiaBoltDB) Get(scope []byte, key []byte) (Serializable, error
 // GetScopeFeatures returns all features set on the given scope.
 func (fdb FlipadelphiaBoltDB) GetScopeFeatures(scope []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
+
 	scopeKeys, err := fdb.getScopeKeyValues(scope)
 	if err != nil {
 		return featureList, err
@@ -233,6 +286,7 @@ func (fdb FlipadelphiaBoltDB) GetScopeFeatures(scope []byte) (Serializable, erro
 // GetScopeFeaturesFilterByValue returns all features on the given scope with a certain value.
 func (fdb FlipadelphiaBoltDB) GetScopeFeaturesFilterByValue(scope []byte, value []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
+
 	scopeKeys, err := fdb.getScopeKeyValuesWithCertainValue(scope, value)
 	if err != nil {
 		return featureList, err
@@ -261,6 +315,11 @@ func (fdb FlipadelphiaBoltDB) GetScopesWithFeature(feature []byte) (Serializable
 	return scopes, err
 }
 
+func (fdb FlipadelphiaBoltDB) GetScopesPaginated(offset, count int) (Serializable, error) {
+	scopes, err := fdb.getScopesPaginated(offset, count)
+	return scopes, err
+}
+
 // GetFeatures returns a list of all features set on all scopes.
 func (fdb FlipadelphiaBoltDB) GetFeatures() (Serializable, error) {
 	features, err := fdb.getAllFeatures()
@@ -270,6 +329,7 @@ func (fdb FlipadelphiaBoltDB) GetFeatures() (Serializable, error) {
 // GetScopeFeaturesFull returns a list of FlipadelphiaFeature objects for the given scope.
 func (fdb FlipadelphiaBoltDB) GetScopeFeaturesFull(scope []byte) (Serializable, error) {
 	var features FlipadelphiaFeatures
+
 	keyVals, err := fdb.getScopeKeyValues(scope)
 	if err != nil {
 		return FlipadelphiaFeatures{}, err

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/codegangsta/negroni"
@@ -35,6 +36,12 @@ func App(db store.PersistenceStore) http.Handler {
 	router.HandleFunc("/admin/scopes", getScopesWithFeatureHandler(db)).
 		Methods("GET").
 		Queries("feature", "{feature:.+}")
+	router.HandleFunc("/admin/scopes", getScopesPaginatedHandler(db)).
+		Methods("GET").
+		Queries("count", "{count:[0-9]+}")
+	router.HandleFunc("/admin/scopes", getScopesPaginatedHandler(db)).
+		Methods("GET").
+		Queries("count", "{count:[0-9]+}", "offset", "{offset:[0-9]+}")
 	router.HandleFunc("/admin/scopes", getScopesHandler(db)).
 		Methods("GET")
 	router.HandleFunc("/admin/features", getAllFeaturesHandler(db)).
@@ -232,6 +239,37 @@ func getScopesWithFeatureHandler(db store.PersistenceStore) http.HandlerFunc {
 		vars := mux.Vars(r)
 		feature := vars["feature"]
 		scopes, err := db.GetScopesWithFeature([]byte(feature))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+			return
+		}
+		WriteResponseBody(scopes, w)
+	})
+}
+
+func getScopesPaginatedHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 1 && len(r.Form) != 2 {
+			utils.Output(fmt.Sprintf("len(r.Form) = %s", len(r.Form)))
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
+
+		count, err := strconv.Atoi(r.FormValue("count"))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Unable to parse 'count' param in query: %q", r.Form.Encode())))
+			return
+		}
+
+		offset, err := strconv.Atoi(r.FormValue("offset"))
+		if err != nil {
+			offset = 0
+		}
+		scopes, err := db.GetScopesPaginated(offset, count)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("%s", err)))

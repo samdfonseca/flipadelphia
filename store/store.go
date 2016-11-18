@@ -23,6 +23,7 @@ type PersistenceStore interface {
 	GetScopes() (Serializable, error)
 	GetScopesWithPrefix([]byte) (Serializable, error)
 	GetScopesWithFeature([]byte) (Serializable, error)
+	GetScopesPaginated(int, int) (Serializable, error)
 	GetFeatures() (Serializable, error)
 	GetScopeFeaturesFull([]byte) (Serializable, error)
 	Close() error
@@ -51,25 +52,37 @@ type FlipadelphiaScopeFeatures []string
 // FlipadelphiaScopeList is a type alias for []string.
 type FlipadelphiaScopeList []string
 
+type StringSlice []string
+
 var validFeatureKeyCharacters = []byte(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-`)
 
 func NewPersistenceStore(c config.FlipadelphiaConfig) PersistenceStore {
-	var ps PersistenceStore
+	// var ps PersistenceStore
 	switch c.PersistenceStoreType {
 	case "bolt":
 		db, err := bolt.Open(c.DBFile, 0600, nil)
 		utils.FailOnError(err, "Unable to open db file", true)
-		ps = NewFlipadelphiaBoltDB(db)
+		ps := NewFlipadelphiaBoltDB(db)
 		utils.Output(fmt.Sprintf("Using BoltDB persistence store: %s", c.DBFile))
+		return ps
 	case "redis":
-		err := fmt.Errorf("Unable to connecto to Redis")
+		err := fmt.Errorf("Unable to connect to Redis")
 		if c.RedisHost == "" {
 			utils.FailOnError(err, "redis_host not set", true)
 		}
-		ps = NewFlipadelphiaRedisDB(c.RedisHost, c.RedisPassword, c.RedisDB)
+		ps := NewFlipadelphiaRedisDB(c.RedisHost, c.RedisPassword, c.RedisDB)
 		utils.Output(fmt.Sprintf("Using Redis persistence store: %s", c.RedisHost))
+		return ps
+	case "redisv2":
+		err := fmt.Errorf("Unable to connect to Redis")
+		if c.RedisHost == "" {
+			utils.FailOnError(err, "redis_host not set", true)
+		}
+		ps := NewFlipadelphiaRedisDBV2(c.RedisHost, c.RedisPassword)
+		utils.Output(fmt.Sprintf("Using RedisV2 persistence store: %s", c.RedisHost))
+		return ps
 	}
-	return ps
+	return nil
 }
 
 // NewFlipadelphiaFeature returns a new instance of FlipadelphiaFeature.
@@ -80,6 +93,15 @@ func NewFlipadelphiaFeature(key []byte, value []byte) FlipadelphiaFeature {
 		Value: string(value),
 		Data:  fmt.Sprint(data),
 	}
+}
+
+func (ss StringSlice) Serialize() []byte {
+	serializedStringSlice, err := json.Marshal(ss)
+	if err != nil {
+		utils.LogOnError(err, "Unable to serialize string slice", true)
+		return []byte("")
+	}
+	return serializedStringSlice
 }
 
 // Serialize returns the FlipadelphiaFeature as json.

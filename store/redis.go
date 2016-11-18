@@ -1,6 +1,10 @@
 package store
 
-import "gopkg.in/redis.v5"
+import (
+	"fmt"
+
+	"gopkg.in/redis.v5"
+)
 
 type FlipadelphiaRedisDB struct {
 	client *redis.Client
@@ -97,6 +101,11 @@ func (rdb FlipadelphiaRedisDB) GetScopesWithFeature(key []byte) (Serializable, e
 		}
 	}
 	return scopesWithFeature, nil
+}
+
+func (rdb FlipadelphiaRedisDB) GetScopesPaginated(offset, count int) (Serializable, error) {
+	var scopes StringSlice
+	return scopes, fmt.Errorf("Unimplemented method")
 }
 
 func (rdb FlipadelphiaRedisDB) GetFeatures() (Serializable, error) {

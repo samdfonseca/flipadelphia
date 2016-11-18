@@ -10,6 +10,19 @@
     "log_file": "flipadelphia_dev.log",
     "port": "3006"
   },
+  "redis": {
+      "persistence_store_type": "redis",
+      "redis_host": "localhost:6379",
+      "redis_password": "",
+      "redis_db": 0,
+      "port": "3006"
+  },
+  "redisv2": {
+      "persistence_store_type": "redisv2",
+      "redis_host": "localhost:6379",
+      "redis_password": "",
+      "port": "3006"
+  },
   "noauth": {
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_dev.db",

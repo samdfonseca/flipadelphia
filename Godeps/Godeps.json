@@ -1,11 +1,16 @@
 {
 	"ImportPath": "github.com/samdfonseca/flipadelphia",
-	"GoVersion": "go1.6",
-	"GodepVersion": "v74",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v75",
 	"Packages": [
-		"github.com/samdfonseca/flipadelphia"
+		"./..."
 	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/antonholmquist/jason",
+			"Comment": "v1.0.0-14-g4238031",
+			"Rev": "423803175a265e07c3f35cd8faf009eac345efb8"
+		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
 			"Comment": "v1.1.0-75-ga5ebf41",
@@ -22,12 +27,34 @@
 			"Rev": "9aae6aaa22315390f03959adca2c4d395b02fcef"
 		},
 		{
+			"ImportPath": "github.com/garyburd/redigo/internal",
+			"Comment": "v1.0.0-5-gffa8d46",
+			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+		},
+		{
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Comment": "v1.0.0-5-gffa8d46",
+			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 		},
 		{
+			"ImportPath": "github.com/gorilla/http",
+			"Rev": "5dff1c014197bd33cbefc3ff9de164ada759b81b"
+		},
+		{
+			"ImportPath": "github.com/gorilla/http/client",
+			"Rev": "5dff1c014197bd33cbefc3ff9de164ada759b81b"
+		},
+		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-colorable",
+			"Rev": "4af63d73f5bea08b682ad2cd198b1e607afd6be0"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-isatty",
@@ -41,6 +68,40 @@
 		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "7a56174f0086b32866ebd746a794417edbc678a1"
+		},
+		{
+			"ImportPath": "gopkg.in/bsm/ratelimit.v1",
+			"Rev": "db14e161995a5177acef654cb0dd785e8ee8bc22"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/consistenthash",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/hashtag",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/pool",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/proto",
+			"Comment": "v5.0.0",
+			"Rev": "6f8957c5b7dece15d1ea5f592ec88f46ee2deffa"
 		}
 	]
 }

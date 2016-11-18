@@ -181,3 +181,167 @@ func TestGetScopesSerializes(t *testing.T) {
 	target := `["user-1","user-2"]`
 	assertEqual(string(actual.Serialize()), target, t)
 }
+
+func TestGetScopesPaginatedWithOffset(t *testing.T) {
+	InitTestDB()
+	defer TestDB.Close()
+	testScopes := []string{"a",
+		"ab",
+		"amet",
+		"at",
+		"cupiditate",
+		"ea",
+		"eum",
+		"fugiat",
+		"magnam",
+		"maxime",
+		"mollitia",
+		"nihil",
+		"quaerat",
+		"quas",
+		"quidem",
+		"reiciendis",
+		"repudiandae",
+		"velit",
+		"veritatis",
+		"voluptas",
+	}
+	testFeatures := []string{"feature1", "feature2", "feature3"}
+	for _, scope := range testScopes {
+		for _, feature := range testFeatures {
+			TestDB.Set([]byte(scope), []byte(feature), []byte("on"))
+		}
+	}
+	paginatedScopes, _ := TestDB.getScopesPaginated(5, 10)
+	if len(paginatedScopes) != 10 {
+		t.Logf("Target Length: 10")
+		t.Logf("Actual Length: %s", len(paginatedScopes))
+		t.Errorf("Length of paginatedScopes did not equal 10")
+	}
+	for i := range paginatedScopes {
+		assertEqual(paginatedScopes[i], testScopes[i+5], t)
+	}
+}
+
+func TestGetScopesPaginatedWithoutOffset(t *testing.T) {
+	InitTestDB()
+	defer TestDB.Close()
+	testScopes := []string{"a",
+		"ab",
+		"amet",
+		"at",
+		"cupiditate",
+		"ea",
+		"eum",
+		"fugiat",
+		"magnam",
+		"maxime",
+		"mollitia",
+		"nihil",
+		"quaerat",
+		"quas",
+		"quidem",
+		"reiciendis",
+		"repudiandae",
+		"velit",
+		"veritatis",
+		"voluptas",
+	}
+	testFeatures := []string{"feature1", "feature2", "feature3"}
+	for _, scope := range testScopes {
+		for _, feature := range testFeatures {
+			TestDB.Set([]byte(scope), []byte(feature), []byte("on"))
+		}
+	}
+	paginatedScopes, _ := TestDB.getScopesPaginated(0, 10)
+	if len(paginatedScopes) != 10 {
+		t.Logf("Target Length: 10")
+		t.Logf("Actual Length: %s", len(paginatedScopes))
+		t.Errorf("Length of paginatedScopes did not equal 10")
+	}
+	for i := range paginatedScopes {
+		assertEqual(paginatedScopes[i], testScopes[i], t)
+	}
+}
+
+func TestGetScopesPaginatedWithoutOffsetCountGreaterThanAvailable(t *testing.T) {
+	InitTestDB()
+	defer TestDB.Close()
+	testScopes := []string{"a",
+		"ab",
+		"amet",
+		"at",
+		"cupiditate",
+		"ea",
+		"eum",
+		"fugiat",
+		"magnam",
+		"maxime",
+		"mollitia",
+		"nihil",
+		"quaerat",
+		"quas",
+		"quidem",
+		"reiciendis",
+		"repudiandae",
+		"velit",
+		"veritatis",
+		"voluptas",
+	}
+	testFeatures := []string{"feature1", "feature2", "feature3"}
+	for _, scope := range testScopes {
+		for _, feature := range testFeatures {
+			TestDB.Set([]byte(scope), []byte(feature), []byte("on"))
+		}
+	}
+	paginatedScopes, _ := TestDB.getScopesPaginated(0, 100)
+	if len(paginatedScopes) != 20 {
+		t.Logf("Target Length: 20")
+		t.Logf("Actual Length: %s", len(paginatedScopes))
+		t.Errorf("Length of paginatedScopes did not equal 20")
+	}
+	for i := range paginatedScopes {
+		assertEqual(paginatedScopes[i], testScopes[i], t)
+	}
+}
+
+func TestGetScopesPaginatedWithOffsetCountGreaterThanAvailable(t *testing.T) {
+	InitTestDB()
+	defer TestDB.Close()
+	testScopes := []string{"a",
+		"ab",
+		"amet",
+		"at",
+		"cupiditate",
+		"ea",
+		"eum",
+		"fugiat",
+		"magnam",
+		"maxime",
+		"mollitia",
+		"nihil",
+		"quaerat",
+		"quas",
+		"quidem",
+		"reiciendis",
+		"repudiandae",
+		"velit",
+		"veritatis",
+		"voluptas",
+	}
+	testFeatures := []string{"feature1", "feature2", "feature3"}
+	for _, scope := range testScopes {
+		for _, feature := range testFeatures {
+			TestDB.Set([]byte(scope), []byte(feature), []byte("on"))
+		}
+	}
+	paginatedScopes, _ := TestDB.getScopesPaginated(10, 100)
+	if len(paginatedScopes) != 10 {
+		t.Logf("Target Length: 10")
+		t.Logf("Actual Length: %s", len(paginatedScopes))
+		t.Errorf("Length of paginatedScopes did not equal 10")
+	}
+	for i := range paginatedScopes {
+		assertEqual(paginatedScopes[i], testScopes[i+10], t)
+	}
+}

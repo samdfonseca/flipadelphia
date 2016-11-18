@@ -118,3 +118,27 @@ func TestSetFeatureHandler_ValidRequest(t *testing.T) {
 	target := `{"data":{"name":"feature1","value":"on","data":"true"}}`
 	checkResult(string(body), target, t)
 }
+
+func TestGetScopesPaginatedWithoutOffset_ValidRequest(t *testing.T) {
+	testScopes := store.StringSlice{"scope0", "scope1", "scope2", "scope3", "scope4"}
+	fdb := store.MockPersistenceStore{
+		OnGetScopesPaginated: func(offset, count int) (store.Serializable, error) {
+			return testScopes, nil
+		},
+	}
+	server := httptest.NewServer(App(fdb))
+	defer server.Close()
+
+	resp, err := http.Get(fmt.Sprintf("%s/admin/scopes?count=5", server.URL))
+	if err != nil {
+		t.Error(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		t.Error(err)
+	}
+
+	checkResult(string(body), fmt.Sprintf(`{"data":%s}`, string(testScopes.Serialize())), t)
+}
