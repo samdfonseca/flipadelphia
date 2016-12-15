@@ -22,34 +22,52 @@ func App(db store.PersistenceStore, n *negroni.Negroni) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/", homeHandler)
 
+	// c := cors.New(cors.Options{
+	// 	AllowedOrigins: "*",
+
+	// GET /features?scope=...&value=...
 	router.HandleFunc("/features", checkScopeFeaturesForValueHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]+}", "value", "{value:[0-9A-Za-z_-]+}")
+	// GET /features?scope=...
 	router.HandleFunc("/features", checkAllScopeFeaturesHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]+}")
+	// GET /features/{feature_name}?scope=...
 	router.HandleFunc("/features/{feature_name}", checkFeatureHandler(db)).
 		Methods("GET").
 		Queries("scope", "{scope:[0-9A-Za-z_-]+}")
 
+	// POST /admin/features/{feature_name}
 	router.HandleFunc("/admin/features/{feature_name}", setFeatureHandler(db)).
 		Methods("POST")
+	// GET /admin/scopes?prefix=...
 	router.HandleFunc("/admin/scopes", getScopesWithPrefixHandler(db)).
 		Methods("GET").
 		Queries("prefix", "{prefix:[0-9A-Za-z_-]+}")
+	// GET /admin/scopes?feature=...
 	router.HandleFunc("/admin/scopes", getScopesWithFeatureHandler(db)).
 		Methods("GET").
 		Queries("feature", "{feature:.+}")
+	// GET /admin/scopes?count=...
 	router.HandleFunc("/admin/scopes", getScopesPaginatedHandler(db)).
 		Methods("GET").
 		Queries("count", "{count:[0-9]+}")
+	// GET /admin/scopes?count=...&offset=...
 	router.HandleFunc("/admin/scopes", getScopesPaginatedHandler(db)).
 		Methods("GET").
 		Queries("count", "{count:[0-9]+}", "offset", "{offset:[0-9]+}")
+	// GET /admin/features?count=...&offset=...
+	router.HandleFunc("/admin/features", getFeaturesPaginatedHandler(db)).
+		Methods("GET").
+		Queries("count", "{count:[0-9]+}", "offset", "{offset:[0-9]+}")
+	// GET /admin/scopes
 	router.HandleFunc("/admin/scopes", getScopesHandler(db)).
 		Methods("GET")
+	// GET /admin/features
 	router.HandleFunc("/admin/features", getAllFeaturesHandler(db)).
 		Methods("GET")
+	// GET /admin/scopes/{scope}/features
 	router.HandleFunc("/admin/scopes/{scope:[0-9A-Za-z_-]+}/features", getScopeFeaturesFullHandler(db)).
 		Methods("GET")
 
@@ -278,6 +296,37 @@ func getScopesPaginatedHandler(db store.PersistenceStore) http.HandlerFunc {
 			return
 		}
 		WriteResponseBody(scopes, w)
+	})
+}
+
+func getFeaturesPaginatedHandler(db store.PersistenceStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if len(r.Form) != 1 && len(r.Form) != 2 {
+			utils.Output(fmt.Sprintf("len(r.Form) = %s", len(r.Form)))
+			w.WriteHeader(http.StatusNotAcceptable)
+			w.Write([]byte(fmt.Sprintf("Unrecognized query: %q", r.Form.Encode())))
+			return
+		}
+
+		count, err := strconv.Atoi(r.FormValue("count"))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Unable to parse 'count' param in query: %q", r.Form.Encode())))
+			return
+		}
+
+		offset, err := strconv.Atoi(r.FormValue("offset"))
+		if err != nil {
+			offset = 0
+		}
+		features, err := db.GetFeaturesPaginated(offset, count)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+			return
+		}
+		WriteResponseBody(features, w)
 	})
 }
 

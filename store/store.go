@@ -24,6 +24,7 @@ type PersistenceStore interface {
 	GetScopesWithPrefix([]byte) (Serializable, error)
 	GetScopesWithFeature([]byte) (Serializable, error)
 	GetScopesPaginated(int, int) (Serializable, error)
+	GetFeaturesPaginated(int, int) (Serializable, error)
 	GetFeatures() (Serializable, error)
 	GetScopeFeaturesFull([]byte) (Serializable, error)
 	Close() error
@@ -78,7 +79,7 @@ func NewPersistenceStore(c config.FlipadelphiaConfig) PersistenceStore {
 		if c.RedisHost == "" {
 			utils.FailOnError(err, "redis_host not set", true)
 		}
-		ps := NewFlipadelphiaRedisDBV2(c.RedisHost, c.RedisPassword)
+		ps := NewFlipadelphiaRedisDBV2(c.RedisHost, c.RedisPassword, c.RedisDB)
 		utils.Output(fmt.Sprintf("Using RedisV2 persistence store: %s", c.RedisHost))
 		return ps
 	}
@@ -152,15 +153,3 @@ func (ffs FlipadelphiaFeatures) Serialize() []byte {
 	}
 	return serializedFeatures
 }
-
-// func (s []string) Serialize() []byte {
-// 	if s == nil {
-// 		return []byte("[]")
-// 	}
-// 	serialized, err := json.Marshal(s)
-// 	if err != nil {
-// 		utils.LogOnError(err, "Unable to serialize strings", true)
-// 		return []byte("")
-// 	}
-// 	return serialized
-// }

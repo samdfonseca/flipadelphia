@@ -165,8 +165,10 @@ func (fdb FlipadelphiaBoltDB) getScopesPaginated(offset, count int) (StringSlice
 		if key != nil {
 			previousScope = mustGetScopeFromScopeKey(key)
 		}
+		// Advance the cursor to the desired offset
 		for counter := 0; key != nil && offset != 0 && counter < offset; key, _ = cursor.Next() {
-			scope, _, _ := splitScopeKey(key)
+			scope := mustGetScopeFromScopeKey(key)
+			// Advance the cursor if the next scope is equal to the previous to avoid counting duplicates
 			for bytes.Equal(previousScope, scope) {
 				key, _ = cursor.Next()
 				scope = mustGetScopeFromScopeKey(key)
@@ -174,6 +176,8 @@ func (fdb FlipadelphiaBoltDB) getScopesPaginated(offset, count int) (StringSlice
 			previousScope = scope
 			counter++
 		}
+		// Retrieve the next n scopes, where n=count
+		// Checks for key != nil to handle overflow, i.e. a bucket with 10 items, offset=5 and count=10
 		for key != nil && len(scopes) < count {
 			scope, _, _ := splitScopeKey(key)
 			if len(scopes) == 0 || !bytes.Equal(scope, []byte(scopes[len(scopes)-1])) {
@@ -184,6 +188,42 @@ func (fdb FlipadelphiaBoltDB) getScopesPaginated(offset, count int) (StringSlice
 		return nil
 	})
 	return scopes, err
+}
+
+func (fdb FlipadelphiaBoltDB) getFeaturesPaginated(offset, count int) (StringSlice, error) {
+	var features StringSlice
+
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		var previousFeature []byte
+
+		cursor := tx.Bucket([]byte("features")).Cursor()
+		key, _ := cursor.First()
+		if key != nil {
+			previousFeature = mustGetKeyFromScopeKey(key)
+		}
+		// Advance the cursor to the desired offset
+		for counter := 0; key != nil && offset != 0 && counter < offset; key, _ = cursor.Next() {
+			feature := mustGetKeyFromScopeKey(key)
+			// Advance the cursor if the next feature is equal to the previous to avoid counting duplicates
+			for bytes.Equal(previousFeature, feature) {
+				key, _ = cursor.Next()
+				feature = mustGetKeyFromScopeKey(key)
+			}
+			previousFeature = feature
+			counter++
+		}
+		// Retrieve the next n features, where n=count
+		// Checks for key != nil to handle overflow, i.e. a bucket with 10 items, offset=5 and count=10
+		for key != nil && len(features) < count {
+			feature := mustGetKeyFromScopeKey(key)
+			if len(features) == 0 || !bytes.Equal(feature, []byte(features[len(features)-1])) {
+				features = append(features, string(feature))
+			}
+			key, _ = cursor.Next()
+		}
+		return nil
+	})
+	return features, err
 }
 
 func (fdb FlipadelphiaBoltDB) getAllScopesWithFeature(feature []byte) (FlipadelphiaScopeList, error) {
@@ -318,6 +358,11 @@ func (fdb FlipadelphiaBoltDB) GetScopesWithFeature(feature []byte) (Serializable
 func (fdb FlipadelphiaBoltDB) GetScopesPaginated(offset, count int) (Serializable, error) {
 	scopes, err := fdb.getScopesPaginated(offset, count)
 	return scopes, err
+}
+
+func (fdb FlipadelphiaBoltDB) GetFeaturesPaginated(offset, count int) (Serializable, error) {
+	features, err := fdb.getFeaturesPaginated(offset, count)
+	return features, err
 }
 
 // GetFeatures returns a list of all features set on all scopes.

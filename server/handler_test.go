@@ -9,8 +9,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/samdfonseca/flipadelphia/store"
 	"github.com/codegangsta/negroni"
+	"github.com/samdfonseca/flipadelphia/store"
 )
 
 func checkResult(actual, target string, t *testing.T) {

@@ -26,19 +26,21 @@ type FlipadelphiaRedisDBV2 struct {
 	pool RedisConnectionPool
 }
 
-func NewFlipadelphiaRedisDBV2(server, password string) FlipadelphiaRedisDBV2 {
+func NewFlipadelphiaRedisDBV2(server, password string, db int) FlipadelphiaRedisDBV2 {
 	return FlipadelphiaRedisDBV2{
 		pool: &redis.Pool{
 			MaxIdle:     3,
 			IdleTimeout: 240 * time.Second,
 			Dial: func() (redis.Conn, error) {
-				c, err := redis.Dial("tcp", server)
+				c, err := redis.Dial("tcp", server, redis.DialDatabase(db))
 				if err != nil {
 					return nil, err
 				}
-				if _, err := c.Do("AUTH", password); err != nil {
-					c.Close()
-					return nil, err
+				if password != "" {
+					if _, err := c.Do("AUTH", password); err != nil {
+						c.Close()
+						return nil, err
+					}
 				}
 				return c, err
 			},
@@ -72,6 +74,24 @@ func (rdb FlipadelphiaRedisDBV2) set(conn RedisConnection, scope, key, value []b
 
 func (rdb FlipadelphiaRedisDBV2) Set(scope, key, value []byte) (Serializable, error) {
 	return rdb.set(rdb.pool.Get(), scope, key, value)
+}
+
+func (rdb FlipadelphiaRedisDBV2) checkValueExistsInSet(setKey, value []byte) (bool, error) {
+	luaScript := `
+	local features = redis.call('lrange', ARGV[1], '0', '-1');
+	local existsInTable = function (t, v)
+		local i = 1;
+		while t[i] ~= nil do
+			if t[i] == v then
+				return true
+			end;
+			i = i + 1;
+		end;
+		return false
+	end;
+	return existsInTable(features, ARGV[2])`
+	b, err := redis.Bool(rdb.pool.Get().Do("EVAL", luaScript, 0, string(setKey), string(value)))
+	return b, err
 }
 
 func (rdb FlipadelphiaRedisDBV2) getScopeFeatures(conn RedisConnection, scope []byte) (Serializable, error) {
@@ -152,6 +172,10 @@ func (rdb FlipadelphiaRedisDBV2) GetScopesWithFeature(key []byte) (Serializable,
 func (rdb FlipadelphiaRedisDBV2) GetScopesPaginated(offset, count int) (Serializable, error) {
 	var scopes StringSlice
 	return scopes, fmt.Errorf("Unimplemented method")
+}
+
+func (rdb FlipadelphiaRedisDBV2) GetFeaturesPaginated(offset, count int) (Serializable, error) {
+	return nil, fmt.Errorf("Unimplemented method")
 }
 
 func (rdb FlipadelphiaRedisDBV2) getFeatures(conn RedisConnection) (Serializable, error) {

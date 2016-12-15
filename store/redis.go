@@ -108,6 +108,10 @@ func (rdb FlipadelphiaRedisDB) GetScopesPaginated(offset, count int) (Serializab
 	return scopes, fmt.Errorf("Unimplemented method")
 }
 
+func (rdb FlipadelphiaRedisDB) GetFeaturesPaginated(offset, count int) (Serializable, error) {
+	return nil, fmt.Errorf("Unimplemented method")
+}
+
 func (rdb FlipadelphiaRedisDB) GetFeatures() (Serializable, error) {
 	scopes, err := rdb.GetScopes()
 	fch := make(chan FlipadelphiaScopeFeatures)
