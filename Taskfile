@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Run your tasks like: run <task>
+# alias run=./Taskfile
+
+PATH=./node_modules/.bin:$PATH
+
+function deps {
+    glide install
+}
+
+function build {
+    FLIPADELPHIA_BUILD_VERSION=$(git rev-parse --verify HEAD) build
+}
+
+function doc {
+    godoc -http=:${1:-8888} -index
+}
+
+function start {
+    local args=$@
+    [[ ! -e $PWD/flipadelphia ]] && build
+    if [[ "$args" == "" ]]; then
+        [[ ! -e $HOME/.flipadelphia/config.json ]] && args="-c $PWD/config/config.example.json"
+    fi
+    ./flipadelphia $args
+}
+
+function vet {
+    go vet
+}
+
+function install {
+    build
+    local bindir=${1:-${GOPATH}/bin}
+    mv ./flipadelphia $bindir
+}
+
+function test {
+    go test -v ./{config,store,server,cmd/flippy}
+}
+
+function debug {
+    local args=$@
+    if [[ "$args" == "" ]]; then
+        [[ ! -e $HOME/.flipadelphia/config.json ]] && args="-c $PWD/config/config.example.json"
+    fi
+    go build && dlv exec ./flipadelphia
+}
+
+function default {
+    start
+}
+
+function help {
+    echo "$0 <task> <args>"
+    echo "Tasks:"
+    compgen -A function | cat -n
+}
+
+TIMEFORMAT="Task completed in %3lR"
+time ${@:-default}
