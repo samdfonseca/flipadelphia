@@ -37,7 +37,7 @@ function install {
 }
 
 function test {
-    go test -v ./{config,store,server,cmd/flippy}
+    go test $(glide nv) $@
 }
 
 function debug {
