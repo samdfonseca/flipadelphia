@@ -10,7 +10,7 @@ function deps {
 }
 
 function build {
-    FLIPADELPHIA_BUILD_VERSION=$(git rev-parse --verify HEAD) build
+    FLIPADELPHIA_BUILD_VERSION=$(git rev-parse --verify HEAD) go build
 }
 
 function doc {
