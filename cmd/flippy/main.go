@@ -1,87 +1,71 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
-	"github.com/samdfonseca/flipadelphia/utils"
-	"github.com/urfave/cli"
+	"github.com/abiosoft/ishell"
+	"github.com/samdfonseca/flipadelphia/cmd/flippy/client"
+	"github.com/samdfonseca/flipadelphia/cmd/flippy/commands"
 )
 
-var flippyVersion string
+var (
+	flippyVersion string
+
+	flipadelphiaUrl string
+)
 
 func init() {
 	flippyVersion = "dev-build"
 	if v := os.Getenv("FLIPPY_BUILD_VERSION"); v != "" {
 		flippyVersion = v
 	}
+
+	flag.StringVar(&flipadelphiaUrl, "url", "http://localhost:3006", "Base URL of the flipadelphia server")
 }
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "flippy"
-	app.Usage = "A CLI interface to the Flipadelphia server"
-	app.Version = flippyVersion
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "url",
-			Value:  "localhost:3006",
-			Usage:  "The base URL of the flipadelphia server.",
-			EnvVar: "FLIPADELPHIA_URL",
-		},
-	}
-	app.Commands = []cli.Command{
-		{
-			Name:    "get-scopes",
-			Aliases: []string{"gs"},
-			Usage:   "Fetch all the existing scopes",
-			Action: func(c *cli.Context) error {
-				client := NewFlippyClient(c.GlobalString("url"))
-				data, _ := client.GetScopes()
-				scopes, _ := data.GetStringArray("data")
-				utils.Output("get-scopes", "flippy")
-				for _, v := range scopes {
-					fmt.Println(v)
-				}
-				return nil
-			},
-		},
-		{
-			Name:    "get-features",
-			Aliases: []string{"gf"},
-			Usage:   "Fetch all the existing features",
-			Action: func(c *cli.Context) error {
-				client := NewFlippyClient(c.GlobalString("url"))
-				data, _ := client.GetFeatures()
-				features, _ := data.GetStringArray("data")
-				utils.Output("get-features", "flippy")
-				for _, v := range features {
-					fmt.Println(v)
-				}
-				return nil
-			},
-		},
-		{
-			Name:      "set-feature",
-			Aliases:   []string{"sf"},
-			Usage:     "Create/update the feature and set its value for the given scope",
-			ArgsUsage: "<key> <scope> <value>",
-			Action: func(c *cli.Context) error {
-				client := NewFlippyClient(c.GlobalString("url"))
-				if len(c.Args()) != 3 {
-					return fmt.Errorf("Wrong number of args. See usage.")
-				}
-				data, err := client.SetFeature(c.Args().Get(1), c.Args().Get(0), c.Args().Get(2))
-				if err != nil {
-					return err
-				}
-				feature, _ := data.GetObject("data")
-				utils.Output("set-feature", "flippy")
-				fmt.Printf("%s\n", feature)
-				return nil
-			},
-		},
+	shell := ishell.New()
+
+	shell.Println(fmt.Sprintf(`Flippy interactive shell. Version %s`, flippyVersion))
+	shell.Println(fmt.Sprintf(`Flipadelphia base URL: %s`, flipadelphiaUrl))
+
+	client, err := client.NewFlippyClient(flipadelphiaUrl)
+	if err != nil {
+		shell.Println(err)
+		return
 	}
 
-	app.Run(os.Args)
+	shell.AddCmd(&ishell.Cmd{
+		Name: "features",
+		Help: "Get all features matching an optional regex: features [<feature regex>]",
+		Func: commands.NewGetFeaturesFunc(client),
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "scope-features",
+		Help: "Get all features for a scope: scope-features <scope>",
+		Func: commands.NewGetScopeFeaturesFunc(client),
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "scope-feature",
+		Help: "Get a feature set on a scope: scope-feature <scope> <feature>",
+		Func: commands.NewGetScopeFeatureFunc(client),
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "scopes",
+		Help: "Get all scopes matching an optional regex: scopes [<scope regex>]",
+		Func: commands.NewGetScopesFunc(client),
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "set-scope-feature",
+		Help: "Sets a feature on a scope: set-scope-feature <scope> <feature> <value>",
+		Func: commands.NewSetScopeFeatureFunc(client),
+	})
+
+	shell.Start()
 }

@@ -1,6 +1,8 @@
 hash: bc563cf2ae4b7fe7a94a1f650cb3fcf78f1a193b4e47dc82f9f6cca6751d1420
-updated: 2016-12-11T22:01:00.63482874-05:00
+updated: 2017-02-01T00:42:36.849717536-05:00
 imports:
+- name: github.com/abiosoft/ishell
+  version: c36ff55bacf5d252d9ea4e6752f59b69e220dd99
 - name: github.com/antonholmquist/jason
   version: 962e09b85496e2e158eec1567fb4c826ce3d55d1
 - name: github.com/boltdb/bolt
@@ -9,6 +11,8 @@ imports:
   version: c7477ad8e330bef55bf1ebe300cf8aa67c492d1b
 - name: github.com/fatih/color
   version: 9aae6aaa22315390f03959adca2c4d395b02fcef
+- name: github.com/flynn/go-shlex
+  version: 3f9db97f856818214da2e1057f8ad84803971cff
 - name: github.com/garyburd/redigo
   version: ffa8d46ada782d81cfda81a0fbd9f45ceae448e8
   subpackages:
@@ -34,6 +38,8 @@ imports:
   - unix
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
+- name: gopkg.in/readline.v1
+  version: 62c6fe6193755f722b8b8788aa7357be55a50ff1
 - name: gopkg.in/redis.v5
   version: 6f8957c5b7dece15d1ea5f592ec88f46ee2deffa
   subpackages:
@@ -43,5 +49,22 @@ imports:
   - internal/pool
   - internal/proto
 testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 5c8f21741620ef6a52e185bbc920499581901c9e
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
 - name: github.com/rafaeljusto/redigomock
   version: 8a39246926d9f2a732f775c5b360d7078191cbbd
+- name: github.com/smartystreets/assertions
+  version: 26acb9229f421449ac63d014995b282d59261a8b
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: 3bd662eac601ad6436e64776af2e112069eb2edc
+  subpackages:
+  - convey
+  - convey/gotest
+  - convey/reporting
