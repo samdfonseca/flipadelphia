@@ -4,20 +4,14 @@ env:
 - FLIPADELPHIA_ENV=bolt_test
   FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
 before_install:
-- GLIDE_OS_ARCH=`go env GOHOSTOS`-`go env GOHOSTARCH`
-- GLIDE_TAG=$(curl -s https://glide.sh/version)
-- GLIDE_LATEST_RELEASE_URL="https://github.com/Masterminds/glide/releases/download/${GLIDE_TAG}/glide-${GLIDE_TAG}-${GLIDE_OS_ARCH}.tar.gz"
-- wget ${GLIDE_LATEST_RELEASE_URL} -O /tmp/glide.tar.gz
-- mkdir /tmp/glide
-- tar --directory=/tmp/glide -xvf /tmp/glide.tar.gz
-- export PATH=$PATH:/tmp/glide/${GLIDE_OS_ARCH}
+- go get -u github.com/golang/dep/...
 - mkdir -p $HOME/.flipadelphia
 - cp ./config/config.example.json $HOME/.flipadelphia/config.json
 before_script:
-- glide install
+- ./Taskfile deps
 script:
-- go test -v ./{cmd/flippy,config,server,store}
-- go build -v
+- ./Taskfile test
+- ./Taskfile build
 deploy:
   provider: releases
   api_key:

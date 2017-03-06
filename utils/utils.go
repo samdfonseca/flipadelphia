@@ -2,13 +2,11 @@ package utils
 
 import (
 	"fmt"
-
-	"github.com/fatih/color"
 )
 
 func logErr(err error) {
 	if err != nil {
-		Output(color.RedString(err.Error()))
+		Output(err.Error())
 	}
 }
 
@@ -17,12 +15,10 @@ func exitErr(err error) {
 }
 
 func Output(s string, appName ...string) {
-	bold := color.New(color.Bold).SprintFunc()
-	green := color.New(color.FgGreen).SprintfFunc()
 	if len(appName) == 0 {
 		appName = append(appName, "flipadelphia")
 	}
-	fmt.Printf("%s: %s\n", green(bold(appName[0])), s)
+	fmt.Printf("%s: %s\n", appName[0], s)
 }
 
 func LogOnError(err error, msg string, appendErr ...bool) {

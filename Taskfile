@@ -6,11 +6,40 @@
 PATH=./node_modules/.bin:$PATH
 
 function deps {
-    glide install
+    dep ensure -update
+}
+
+function clean_flipadelphia {
+    local findopts=". -regextype awk -regex ".*flipadelphia$" -type f -executable -delete"
+    if [[ -f "$(which gfind)" ]]; then
+        gfind $findopts
+      else
+        find $findopts
+    fi
+}
+
+function clean_flippy {
+    local findopts=". -regextype awk -regex ".*flippy$" -type f -executable -delete"
+    if [[ -f "$(which gfind)" ]]; then
+        gfind $findopts
+    else
+        find $findopts
+    fi
+}
+
+function clean {
+    clean_flipadelphia
+    clean_flippy
 }
 
 function build {
-    FLIPADELPHIA_BUILD_VERSION=$(git rev-parse --verify HEAD) go build
+    clean_flipadelphia
+    FLIPADELPHIA_BUILD_VERSION=$(git rev-parse --verify HEAD) go build -v
+}
+
+function build_flippy {
+    clean_flippy
+    go build -v ./cmd/flippy
 }
 
 function doc {
@@ -31,13 +60,15 @@ function vet {
 }
 
 function install {
-    build
     local bindir=${1:-${GOPATH}/bin}
+    build
     mv ./flipadelphia $bindir
+    build_flippy
+    mv ./flippy $bindir
 }
 
 function test {
-    go test $(glide nv) $@
+    go test -v `find . -maxdepth 1 -type d -execdir echo ./{}/... \;| egrep -v '(vendor|\.git|\.idea|\./\./\.\.\.$|docker)'`
 }
 
 function debug {
@@ -60,3 +91,4 @@ function help {
 
 TIMEFORMAT="Task completed in %3lR"
 time ${@:-default}
+# vim: set ts=2 sw=4 tw=120 ft=sh noet :
