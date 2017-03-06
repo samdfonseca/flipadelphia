@@ -67,7 +67,7 @@ function install {
 }
 
 function test {
-    go test -v `find . -maxdepth 1 -type d -execdir echo ./{}/... \;| egrep -v '(vendor|\.git|\.idea|\./\./\.\.\.$|docker)'`
+    go test -v `find . -maxdepth 1 -type d -exec echo {}/... \;| egrep -v '(vendor|\.git|\.idea|\./\./\.\.\.$|docker)'`
 }
 
 function debug {
