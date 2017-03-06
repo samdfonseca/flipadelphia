@@ -3,7 +3,6 @@
 # Run your tasks like: run <task>
 # alias run=./Taskfile
 
-PATH=./node_modules/.bin:$PATH
 
 function deps {
     dep ensure -update
