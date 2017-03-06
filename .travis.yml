@@ -1,5 +1,5 @@
 language: go
-go: 1.7
+go: 1.8
 env:
 - FLIPADELPHIA_ENV=bolt_test
   FLIPADELPHIA_CONFIG=$TRAVIS_BUILD_DIR/config/config.example.json
