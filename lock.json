@@ -1,14 +1,6 @@
 {
-    "memo": "9c64a0bc9c579ba527a754e392e7c7826c58ae9949b78b31d8b3ced81e6e167c",
+    "memo": "7823374875fc2154089958d5ad841adfbf6250a4a559b077fbbbc712eb45f81c",
     "projects": [
-        {
-            "name": "github.com/Sirupsen/logrus",
-            "version": "v0.11.4",
-            "revision": "0208149b40d863d2c1a2f8fe5753096a9cf2cc8b",
-            "packages": [
-                "."
-            ]
-        },
         {
             "name": "github.com/antonholmquist/jason",
             "branch": "master",
