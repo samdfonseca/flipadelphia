@@ -1,0 +1,28 @@
+{
+    "dependencies": {
+        "github.com/antonholmquist/jason": {
+            "branch": "master"
+        },
+        "github.com/boltdb/bolt": {
+            "version": "^1.3.0"
+        },
+        "github.com/codegangsta/negroni": {
+            "revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
+        },
+        "github.com/garyburd/redigo": {
+            "branch": "master"
+        },
+        "github.com/gorilla/http": {
+            "branch": "master"
+        },
+        "github.com/gorilla/mux": {
+            "branch": "master"
+        },
+        "github.com/urfave/cli": {
+            "revision": "d9021faab69f92295ef7061bd39e4a76dcbdef32"
+        },
+        "gopkg.in/redis.v5": {
+            "revision": "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0"
+        }
+    }
+}

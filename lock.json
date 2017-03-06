@@ -1,0 +1,105 @@
+{
+    "memo": "9c64a0bc9c579ba527a754e392e7c7826c58ae9949b78b31d8b3ced81e6e167c",
+    "projects": [
+        {
+            "name": "github.com/Sirupsen/logrus",
+            "version": "v0.11.4",
+            "revision": "0208149b40d863d2c1a2f8fe5753096a9cf2cc8b",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/antonholmquist/jason",
+            "branch": "master",
+            "revision": "962e09b85496e2e158eec1567fb4c826ce3d55d1",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/boltdb/bolt",
+            "version": "v1.3.0",
+            "revision": "583e8937c61f1af6513608ccc75c97b6abdf4ff9",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/codegangsta/negroni",
+            "revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/garyburd/redigo",
+            "branch": "master",
+            "revision": "0d253a66e6e1349f4581d6d2b300ee434ee2da9f",
+            "packages": [
+                "internal",
+                "redis"
+            ]
+        },
+        {
+            "name": "github.com/gorilla/context",
+            "version": "v1.1",
+            "revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/http",
+            "branch": "master",
+            "revision": "5dff1c014197bd33cbefc3ff9de164ada759b81b",
+            "packages": [
+                ".",
+                "client"
+            ]
+        },
+        {
+            "name": "github.com/gorilla/mux",
+            "branch": "master",
+            "revision": "599cba5e7b6137d46ddf58fb1765f5d928e69604",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/rafaeljusto/redigomock",
+            "version": "v2.0",
+            "revision": "ca49a8af34fc0c903a37409317576da14b3f1cbd",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/urfave/cli",
+            "revision": "d9021faab69f92295ef7061bd39e4a76dcbdef32",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "golang.org/x/sys",
+            "branch": "master",
+            "revision": "e48874b42435b4347fc52bdee0424a52abc974d7",
+            "packages": [
+                "unix"
+            ]
+        },
+        {
+            "name": "gopkg.in/redis.v5",
+            "revision": "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0",
+            "packages": [
+                ".",
+                "internal",
+                "internal/consistenthash",
+                "internal/hashtag",
+                "internal/pool",
+                "internal/proto"
+            ]
+        }
+    ]
+}
