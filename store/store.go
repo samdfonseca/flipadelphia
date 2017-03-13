@@ -27,6 +27,10 @@ type PersistenceStore interface {
 	GetFeaturesPaginated(int, int) (Serializable, error)
 	GetFeatures() (Serializable, error)
 	GetScopeFeaturesFull([]byte) (Serializable, error)
+	CheckScopeExists([]byte) bool
+	CheckFeatureExists([]byte) bool
+	CheckScopeHasFeature([]byte, []byte) bool
+	CheckFeatureHasScope([]byte, []byte) bool
 	Close() error
 }
 

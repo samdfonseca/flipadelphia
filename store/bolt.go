@@ -6,23 +6,44 @@ import (
 	"sort"
 
 	"github.com/boltdb/bolt"
+	//"github.com/google/uuid"
+	"github.com/satori/go.uuid"
 	"github.com/samdfonseca/flipadelphia/utils"
 )
 
 // FlipadelphiaBoltDB holds a pointer to the boltdb instance and the name of the main bucket.
 type FlipadelphiaBoltDB struct {
-	db         *bolt.DB
-	bucketName string
+	db *bolt.DB
 }
 
-func createBucket(db *bolt.DB, bucketName []byte) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName)
-		return err
-	})
-	createLog := fmt.Sprintf("CREATE BUCKET - Name: %q", bucketName)
-	utils.LogOnError(err, fmt.Sprint(createLog), true)
-	return err
+type BucketCreator interface {
+	CreateBucket([]byte) (*bolt.Bucket, error)
+	CreateBucketIfNotExists([]byte) (*bolt.Bucket, error)
+}
+
+func createBuckets(bc BucketCreator, bucketNames ...[]byte) error {
+	//tx, err := db.Begin(true)
+	//if err != nil {
+	//	msg := "Failed to begin transaction while creating bucket: %q"
+	//	utils.LogOnError(err, fmt.Sprintf(msg, bucketName), true)
+	//	return err
+	//}
+	//defer tx.Rollback()
+	for _, bktname := range bucketNames {
+		if _, err := bc.CreateBucketIfNotExists(bktname); err != nil {
+			msg := "Failed to create bucket: %q"
+			utils.LogOnError(err, fmt.Sprintf(msg, bktname), true)
+			return err
+		}
+		msg := fmt.Sprintf("CREATED BUCKET - Name: %q", bktname)
+		utils.LogOnSuccess(nil, msg)
+	}
+	//if err := tx.Commit(); err != nil {
+	//	msg := "Failed to commit transaction while creating bucket: %q. Rolling back transaction"
+	//	utils.LogOnError(err, fmt.Sprintf(msg, bucketName), true)
+	//	return err
+	//}
+	return nil
 }
 
 // NewFlipadelphiaBoltDB creates a new instance of FlipadelphiaBoltDB. The "features" bucket is created
@@ -30,21 +51,34 @@ func createBucket(db *bolt.DB, bucketName []byte) error {
 func NewFlipadelphiaBoltDB(db *bolt.DB) FlipadelphiaBoltDB {
 	requiredBuckets := [][]byte{
 		[]byte("features"),
+		[]byte("scopes"),
+		[]byte("values"),
 	}
-	for _, bucket := range requiredBuckets {
-		err := db.View(func(tx *bolt.Tx) error {
-			if tx.Bucket(bucket) != nil {
-				return nil
-			}
-			return fmt.Errorf(`Bucket "%s" already exists`, bucket)
-		})
-		if err != nil {
-			if err := createBucket(db, bucket); err != nil {
-				utils.FailOnError(err, fmt.Sprintf("EXITING - Unable to create required bucket '%s'", bucket), false)
-			}
-		}
-	}
-	return FlipadelphiaBoltDB{db: db, bucketName: "features"}
+	db.Update(func(tx *bolt.Tx) error {
+		err := createBuckets(tx, requiredBuckets...)
+		//for _, bktname := range requiredBuckets {
+		//	utils.Output(fmt.Sprintf("Creating bucket: %q", bktname))
+		//	err := createBucket(db, tx, bktname)
+		//	if err != nil {
+		//		utils.FailOnError(err, fmt.Sprintf("EXITING - Unable to create required bucket '%s'", bktname), false)
+		//	}
+		//}
+		return err
+	})
+	//for _, bucket := range requiredBuckets {
+	//	err := db.View(func(tx *bolt.Tx) error {
+	//		if tx.Bucket(bucket) != nil {
+	//			return nil
+	//		}
+	//		return fmt.Errorf(`Bucket "%s" already exists`, bucket)
+	//	})
+	//	if err != nil {
+	//		if err := createBucket(db, db, bucket); err != nil {
+	//			utils.FailOnError(err, fmt.Sprintf("EXITING - Unable to create required bucket '%s'", bucket), false)
+	//		}
+	//	}
+	//}
+	return FlipadelphiaBoltDB{db: db}
 }
 
 // mergeScopeKey joins two []byte around the ":" character.
@@ -86,24 +120,38 @@ func (fdb FlipadelphiaBoltDB) Close() error {
 	return fdb.db.Close()
 }
 
-func (fdb FlipadelphiaBoltDB) getScopeKeyValues(scope []byte) (map[string][]byte, error) {
-	keys := make(map[string][]byte)
+func (fdb FlipadelphiaBoltDB) getScopeFeatureValues(scope []byte) (map[string][]byte, error) {
+	var values = make(map[string][]byte)
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		cursor := tx.Bucket([]byte("features")).Cursor()
-		for key, val := cursor.Seek(scope); bytes.HasPrefix(append(key, ':'), scope) && key != nil; key, val = cursor.Next() {
-			splits := bytes.SplitN(key, []byte(":"), 2)
-			keys[string(splits[1])] = val
+		scopesBkt := tx.Bucket([]byte("scopes"))
+		if scopesBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "scopes"`)
+		}
+		valuesBkt := tx.Bucket([]byte("values"))
+		if valuesBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "values"`)
+		}
+		scopeBkt := scopesBkt.Bucket(scope)
+		if scopeBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "scopes/%q"`, scope)
+		}
+		if err := scopeBkt.ForEach(func(k, v []byte) error {
+			value := valuesBkt.Get(v)
+			values[utils.Btos(k)] = value
+			return nil
+		}); err != nil {
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return keys, nil
+	return values, nil
 }
 
 func (fdb FlipadelphiaBoltDB) getScopeKeyValuesWithCertainValue(scope []byte, targetValue []byte) (map[string][]byte, error) {
-	keys, err := fdb.getScopeKeyValues(scope)
+	keys, err := fdb.getScopeFeatureValues(scope)
 	if err != nil {
 		return keys, err
 	}
@@ -231,35 +279,62 @@ func (fdb FlipadelphiaBoltDB) getAllScopesWithFeature(feature []byte) (Flipadelp
 
 	err := fdb.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("features"))
-		bucket.ForEach(func(scopeKey, val []byte) error {
-			scope, key, err := splitScopeKey(scopeKey)
-			if err == nil && bytes.Equal(feature, key) {
-				scopes = append(scopes, fmt.Sprintf("%s", scope))
+		err := bucket.ForEach(func(scopeKey, val []byte) error {
+			sname, fname, err := splitScopeKey(scopeKey)
+			if err != nil {
+				return err
+			}
+			if bytes.Equal(feature, fname) {
+				scopes = append(scopes, fmt.Sprintf("%s", sname))
 			}
 			return nil
 		})
-		return nil
+		return err
 	})
 	return scopes, err
+}
+
+func (fdb FlipadelphiaBoltDB) getAllFeaturesWithScope(scope []byte) (FlipadelphiaFeatures, error) {
+	var features FlipadelphiaFeatures
+
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("features"))
+		err := bucket.ForEach(func(scopeKey, val []byte) error {
+			sname, fname, err := splitScopeKey(scopeKey)
+			if err != nil {
+				return err
+			}
+			if bytes.Equal(scope, sname) {
+				features = append(features, NewFlipadelphiaFeature(fname, val))
+			}
+			return nil
+		})
+		return err
+	})
+	return features, err
 }
 
 func (fdb FlipadelphiaBoltDB) getAllFeatures() (FlipadelphiaScopeFeatures, error) {
 	var features FlipadelphiaScopeFeatures
 
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		var previousFeature []byte
-
 		bucket := tx.Bucket([]byte("features"))
-		bucket.ForEach(func(key, val []byte) error {
-			_, feature, err := splitScopeKey(key)
-			if err == nil && !bytes.Equal(feature, previousFeature) {
-				features = append(features, fmt.Sprintf("%s", feature))
-				previousFeature = feature
+		err := bucket.ForEach(func(key, val []byte) error {
+			_, fname, err := splitScopeKey(key)
+			if err != nil {
+				return err
 			}
+			features = append(features, fmt.Sprintf("%s", fname))
+			//if !bytes.Equal(fname, previousFeature) {
+			//	previousFeature = fname
+			//}
 			return nil
 		})
-		return nil
+		return err
 	})
+	if err != nil {
+		return nil, err
+	}
 	sort.Strings(features)
 	var uniqueFeatures FlipadelphiaScopeFeatures
 	for i := range features {
@@ -274,46 +349,110 @@ func (fdb FlipadelphiaBoltDB) getAllFeatures() (FlipadelphiaScopeFeatures, error
 	return uniqueFeatures, err
 }
 
+func (fdb FlipadelphiaBoltDB) setScopeFeature(tx *bolt.Tx, scope, feature, scopeFeatUUID []byte) error {
+	scopesBkt := tx.Bucket([]byte("scopes"))
+	if scopesBkt == nil {
+		if err := createBuckets(tx, []byte("scopes")); err != nil {
+			return err
+		}
+		return fdb.setScopeFeature(tx, scope, feature, scopeFeatUUID)
+	}
+	scopeBkt := scopesBkt.Bucket(scope)
+	if scopeBkt == nil {
+		if err := createBuckets(scopesBkt, scope); err != nil {
+			return err
+		}
+		return fdb.setScopeFeature(tx, scope, feature, scopeFeatUUID)
+	}
+	if err := scopeBkt.Put(feature, scopeFeatUUID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (fdb FlipadelphiaBoltDB) setFeatureScope(tx *bolt.Tx, scope, feature, scopeFeatUUID []byte) error {
+	featsBkt := tx.Bucket([]byte("features"))
+	if featsBkt == nil {
+		if err := createBuckets(tx, []byte("features")); err != nil {
+			return err
+		}
+		return fdb.setFeatureScope(tx, scope, feature, scopeFeatUUID)
+	}
+	featBkt := featsBkt.Bucket(feature)
+	if featBkt == nil {
+		if err := createBuckets(featsBkt, feature); err != nil {
+			return err
+		}
+		return fdb.setFeatureScope(tx, scope, feature, scopeFeatUUID)
+	}
+	if err := featBkt.Put(scope, scopeFeatUUID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (fdb FlipadelphiaBoltDB) setScopeFeatureUUIDValue(tx *bolt.Tx, scopeFeatUUID, value []byte) error {
+	valuesBkt := tx.Bucket([]byte("values"))
+	if valuesBkt == nil {
+		if err := createBuckets(tx, []byte("values")); err != nil {
+			return err
+		}
+		return fdb.setScopeFeatureUUIDValue(tx, scopeFeatUUID, value)
+	}
+	if err := valuesBkt.Put(scopeFeatUUID, value); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Set stores the feature in the database and returns an instance of FlipadelphiaFeature.
-func (fdb FlipadelphiaBoltDB) Set(scope []byte, key []byte, value []byte) (Serializable, error) {
-	err := fdb.db.Batch(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("features"))
-		scopeKey, err := mergeScopeKey(scope, key)
-		if err != nil {
+func (fdb FlipadelphiaBoltDB) Set(scope []byte, feature []byte, value []byte) (Serializable, error) {
+	err := fdb.db.Update(func(tx *bolt.Tx) error {
+		scopeFeatUUID := uuid.NewV4().Bytes()
+		if err := fdb.setScopeFeature(tx, scope, feature, scopeFeatUUID); err != nil {
 			return err
 		}
-		err = bucket.Put(scopeKey, value)
-		if err != nil {
+
+		if err := fdb.setFeatureScope(tx, scope, feature, scopeFeatUUID); err != nil {
 			return err
 		}
+
+		if err := fdb.setScopeFeatureUUIDValue(tx, scopeFeatUUID, value); err != nil {
+			return err
+		}
+
 		return nil
 	})
-	return NewFlipadelphiaFeature(key, value), err
+	return NewFlipadelphiaFeature(feature, value), err
 }
 
 // Get retrieves the feature from the database and returns an instance of FlipadelphiaFeature.
-func (fdb FlipadelphiaBoltDB) Get(scope []byte, key []byte) (Serializable, error) {
+func (fdb FlipadelphiaBoltDB) Get(scope []byte, feature []byte) (Serializable, error) {
 	var value []byte
-	var resultBuffer bytes.Buffer
 
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("features"))
-		mergedScopeKey, err := mergeScopeKey(scope, key)
-		if err != nil {
-			return err
+		scopesBkt := tx.Bucket([]byte("scopes"))
+		scopeBkt := scopesBkt.Bucket(scope)
+		scopeFeatUUID := scopeBkt.Get(feature)
+		if scopeFeatUUID == nil {
+			return fmt.Errorf("Feature %q not set for scope %q", feature, scope)
 		}
-		resultBuffer.Write(bucket.Get(mergedScopeKey))
-		value = resultBuffer.Bytes()
+
+		valuesBkt := tx.Bucket([]byte("values"))
+		value = valuesBkt.Get(scopeFeatUUID)
+		if value == nil {
+			return fmt.Errorf("Feature %q not set for scope %q", feature, scope)
+		}
 		return nil
 	})
-	return NewFlipadelphiaFeature(key, value), err
+	return NewFlipadelphiaFeature(feature, value), err
 }
 
 // GetScopeFeatures returns all features set on the given scope.
 func (fdb FlipadelphiaBoltDB) GetScopeFeatures(scope []byte) (Serializable, error) {
 	var featureList FlipadelphiaScopeFeatures
 
-	scopeKeys, err := fdb.getScopeKeyValues(scope)
+	scopeKeys, err := fdb.getScopeFeatureValues(scope)
 	if err != nil {
 		return featureList, err
 	}
@@ -375,7 +514,7 @@ func (fdb FlipadelphiaBoltDB) GetFeatures() (Serializable, error) {
 func (fdb FlipadelphiaBoltDB) GetScopeFeaturesFull(scope []byte) (Serializable, error) {
 	var features FlipadelphiaFeatures
 
-	keyVals, err := fdb.getScopeKeyValues(scope)
+	keyVals, err := fdb.getScopeFeatureValues(scope)
 	if err != nil {
 		return FlipadelphiaFeatures{}, err
 	}
@@ -383,4 +522,80 @@ func (fdb FlipadelphiaBoltDB) GetScopeFeaturesFull(scope []byte) (Serializable, 
 		features = append(features, NewFlipadelphiaFeature([]byte(key), []byte(val)))
 	}
 	return features, nil
+}
+
+func (fdb FlipadelphiaBoltDB) CheckScopeExists(scope []byte) bool {
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		scopesBkt := tx.Bucket([]byte("scopes"))
+		if scopesBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "scopes"`)
+		}
+		scopeBkt := scopesBkt.Bucket(scope)
+		if scopeBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "scopes/%q"`, scope)
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (fdb FlipadelphiaBoltDB) CheckFeatureExists(feature []byte) bool {
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		featuresBkt := tx.Bucket([]byte("features"))
+		if featuresBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "features"`)
+		}
+		featureBkt := featuresBkt.Bucket(feature)
+		if featureBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "features/%q"`, feature)
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (fdb FlipadelphiaBoltDB) CheckScopeHasFeature(scope, feature []byte) bool {
+	if scopeExists := fdb.CheckScopeExists(scope); !scopeExists {
+		return scopeExists
+	}
+	if featureExists := fdb.CheckFeatureExists(feature); !featureExists {
+		return featureExists
+	}
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		scopeBkt := tx.Bucket([]byte("scopes")).Bucket(scope)
+		if val := scopeBkt.Get(feature); val == nil {
+			return fmt.Errorf(`Bucket key does not exist: "scopes/%q/%q"`, scope, feature)
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (fdb FlipadelphiaBoltDB) CheckFeatureHasScope(scope, feature []byte) bool {
+	if scopeExists := fdb.CheckScopeExists(scope); !scopeExists {
+		return scopeExists
+	}
+	if featureExists := fdb.CheckFeatureExists(feature); !featureExists {
+		return featureExists
+	}
+	err := fdb.db.View(func(tx *bolt.Tx) error {
+		featureBkt := tx.Bucket([]byte("features")).Bucket(feature)
+		if val := featureBkt.Get(scope); val == nil {
+			return fmt.Errorf(`Bucket key does not exist: "features/%q/%q"`, feature, scope)
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return true
 }

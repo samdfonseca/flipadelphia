@@ -3,7 +3,7 @@
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_bolt.db",
     "log_file": "flipadelphia_bolt.log",
-    "port": "3006"
+    "port": 3006
   },
   "redis": {
     "persistence_store_type": "redis",
@@ -11,7 +11,7 @@
     "redis_password": "",
     "redis_db": 0,
     "log_file": "flipadelphia_redis.log",
-    "port": "3006"
+    "port": 3006
   },
   "redisv2": {
     "persistence_store_type": "redisv2",
@@ -19,13 +19,13 @@
     "redis_password": "",
     "redis_db": 0,
     "log_file": "flipadelphia_redisv2.log",
-    "port": "3006"
+    "port": 3006
   },
   "bolt_test": {
     "persistence_store_type": "bolt",
     "db_file": "flipadelphia_test.db",
     "log_file": "flipadelphia_bolt_test.log",
-    "port": "3006"
+    "port": 3006
   },
   "redis_test": {
     "persistence_store_type": "redis",
@@ -33,6 +33,6 @@
     "redis_password": "",
     "redis_db": 0,
     "log_file": "flipadelphia_redis_test.log",
-    "port": "3006"
+    "port": 3006
   }
 }

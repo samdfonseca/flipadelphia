@@ -10,26 +10,48 @@
 * Flipadelphia uses a config file to keep track of settings for runtime environments. By default, the file is expected
     to be in the ~/.flipadelphia directory. You can also manually set the config with the -c/--config flag. An example
     of the config file is in the config subpackage.
-* To handle dependencies, Flipadelphia uses the [godep](https://github.com/tools/godep) package manager. Godep
+* To handle dependencies, Flipadelphia uses the [dep](https://github.com/golang/dep) dependency manager. Dep
     installs dependencies into the ```vendor``` directory within a project, and handles versioning of dependencies.
 
 ```sh
 $ mkdir ~/.flipadelphia
 $ cp config/config.example.json ~/.flipadelphia/config.json
-$ make deps
+$ ./Taskfile deps
 ```
 
 ## Building
 
 ```sh
-$ make build
+$ ./Taskfile build
 ```
+
+## BoltDB Data Layout
+
+3 top level buckets
+- features
+- scopes
+- values
+
+"features" bucket
+- feature1 [bucket]
+-- scope1: "uuid1"
+-- scope2: "uuid2"
+
+"scopes" bucket
+- scope1 [bucket]
+-- feature1: "uuid1"
+- scope2 [bucket]
+-- feature1: "uuid2"
+
+"values" bucket
+- uuid1: "on"
+- uuid2: "off"
 
 ## Running
 ```sh
-$ ./flipadelphia -h
+$ ./flipadelphia help
 NAME:
-   flipadelphia - flipadelphia flips your features
+   flipadelphia - Start the Flipadelphia server
 
 USAGE:
    flipadelphia [global options] command [command options] [arguments...]
@@ -38,25 +60,17 @@ VERSION:
    dev-build
 
 COMMANDS:
-   sanitycheck, c       Run a quick sanity check (DEV PURPOSES ONLY)
-   serve, s             Start the Flipadelphia server
-   help, h              Shows a list of commands or help for one command
+     help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --help, -h           show help
-   --version, -v        print the version
+   --env value, -e value  An environment from the config.json file to use (default: "bolt") [$FLIPADELPHIA_ENV]
+   --config value         Path to the config file. (default: "config.json") [$FLIPADELPHIA_CONFIG]
+   --help, -h             show help
+   --version, -v          print the version
 
-
-$ ./flipadelphia serve -h
-NAME:
-   flipadelphia serve - Start the Flipadelphia server
-
-USAGE:
-   flipadelphia serve [command options] [arguments...]
-
-OPTIONS:
-   --env, -e "development"      An environment from the config.json file to use [$FLIPADELPHIA_ENV]
-   --config "config.json"       Path to the config file. [$FLIPADELPHIA_CONFIG]
+$ ./flipadelphia
+flipadelphia: Using BoltDB persistence store: /Users/samfonseca/.flipadelphia/flipadelphia_dev.db
+flipadelphia: Listening on port 3006
 ```
 
 ## Usage
@@ -66,7 +80,7 @@ OPTIONS:
 Auth settings are defined in the config.json file for the runtime environment
 
 ```sh
-$ curl -s -H "X-SESSION-TOKEN:abc123" -d '{"scope":"user-1","value":"on"}' -X POST localhost:3006/admin/features/feature1 | jq .
+$ curl -s -d '{"scope":"user-1","value":"on"}' -X POST localhost:3006/admin/features/feature1 | jq .
 {
   "name": "feature1",
   "value": "on",
