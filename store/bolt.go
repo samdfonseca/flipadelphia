@@ -206,32 +206,21 @@ func (fdb FlipadelphiaBoltDB) getScopesPaginated(offset, count int) (StringSlice
 	var scopes StringSlice
 
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		var previousScope []byte
-
-		cursor := tx.Bucket([]byte("features")).Cursor()
-		key, _ := cursor.First()
-		if key != nil {
-			previousScope = mustGetScopeFromScopeKey(key)
+		scopesBkt := tx.Bucket([]byte("scopes"))
+		if scopesBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "scopes"`)
 		}
+		cursor := scopesBkt.Cursor()
+		scope, _ := cursor.First()
 		// Advance the cursor to the desired offset
-		for counter := 0; key != nil && offset != 0 && counter < offset; key, _ = cursor.Next() {
-			scope := mustGetScopeFromScopeKey(key)
-			// Advance the cursor if the next scope is equal to the previous to avoid counting duplicates
-			for bytes.Equal(previousScope, scope) {
-				key, _ = cursor.Next()
-				scope = mustGetScopeFromScopeKey(key)
-			}
-			previousScope = scope
+		for counter := 0; scope != nil && offset != 0 && counter < offset; scope, _ = cursor.Next() {
 			counter++
 		}
 		// Retrieve the next n scopes, where n=count
 		// Checks for key != nil to handle overflow, i.e. a bucket with 10 items, offset=5 and count=10
-		for key != nil && len(scopes) < count {
-			scope, _, _ := splitScopeKey(key)
-			if len(scopes) == 0 || !bytes.Equal(scope, []byte(scopes[len(scopes)-1])) {
-				scopes = append(scopes, string(scope))
-			}
-			key, _ = cursor.Next()
+		for scope != nil && len(scopes) < count {
+			scopes = append(scopes, string(scope))
+			scope, _ = cursor.Next()
 		}
 		return nil
 	})
@@ -242,32 +231,21 @@ func (fdb FlipadelphiaBoltDB) getFeaturesPaginated(offset, count int) (StringSli
 	var features StringSlice
 
 	err := fdb.db.View(func(tx *bolt.Tx) error {
-		var previousFeature []byte
-
-		cursor := tx.Bucket([]byte("features")).Cursor()
-		key, _ := cursor.First()
-		if key != nil {
-			previousFeature = mustGetKeyFromScopeKey(key)
+		featuresBkt := tx.Bucket([]byte("features"))
+		if featuresBkt == nil {
+			return fmt.Errorf(`Bucket does not exist: "features"`)
 		}
+		cursor := featuresBkt.Cursor()
+		feature, _ := cursor.First()
 		// Advance the cursor to the desired offset
-		for counter := 0; key != nil && offset != 0 && counter < offset; key, _ = cursor.Next() {
-			feature := mustGetKeyFromScopeKey(key)
-			// Advance the cursor if the next feature is equal to the previous to avoid counting duplicates
-			for bytes.Equal(previousFeature, feature) {
-				key, _ = cursor.Next()
-				feature = mustGetKeyFromScopeKey(key)
-			}
-			previousFeature = feature
+		for counter := 0; feature != nil && offset != 0 && counter < offset; feature, _ = cursor.Next() {
 			counter++
 		}
 		// Retrieve the next n features, where n=count
 		// Checks for key != nil to handle overflow, i.e. a bucket with 10 items, offset=5 and count=10
-		for key != nil && len(features) < count {
-			feature := mustGetKeyFromScopeKey(key)
-			if len(features) == 0 || !bytes.Equal(feature, []byte(features[len(features)-1])) {
-				features = append(features, string(feature))
-			}
-			key, _ = cursor.Next()
+		for feature != nil && len(features) < count {
+			features = append(features, string(feature))
+			feature, _ = cursor.Next()
 		}
 		return nil
 	})

@@ -12,6 +12,10 @@ type MockPersistenceStore struct {
 	OnGetFeaturesPaginated          func(int, int) (Serializable, error)
 	OnGetFeatures                   func() (Serializable, error)
 	OnGetScopeFeaturesFull          func([]byte) (Serializable, error)
+	OnCheckScopeExists		func([]byte) bool
+	OnCheckFeatureExists		func([]byte) bool
+	OnCheckScopeHasFeature		func([]byte, []byte) bool
+	OnCheckFeatureHasScope		func([]byte, []byte) bool
 }
 
 func (mStore MockPersistenceStore) Get(scope, key []byte) (Serializable, error) {
@@ -56,6 +60,22 @@ func (mStore MockPersistenceStore) GetFeatures() (Serializable, error) {
 
 func (mStore MockPersistenceStore) GetScopeFeaturesFull(scope []byte) (Serializable, error) {
 	return mStore.OnGetScopeFeaturesFull(scope)
+}
+
+func (mStore MockPersistenceStore) CheckScopeExists(scope []byte) bool {
+	return mStore.OnCheckScopeExists(scope)
+}
+
+func (mStore MockPersistenceStore) CheckFeatureExists(feature []byte) bool {
+	return mStore.OnCheckFeatureExists(feature)
+}
+
+func (mStore MockPersistenceStore) CheckScopeHasFeature(scope, feature []byte) bool {
+	return mStore.OnCheckScopeHasFeature(scope, feature)
+}
+
+func (mStore MockPersistenceStore) CheckFeatureHasScope(scope, feature []byte) bool {
+	return mStore.OnCheckFeatureHasScope(scope, feature)
 }
 
 func (mStore MockPersistenceStore) Close() error {

@@ -46,6 +46,18 @@ func TestCheckFeatureHandler_ValidRequest_PresetFeature(t *testing.T) {
 				Data:  "true",
 			}, nil
 		},
+		OnCheckFeatureExists: func(feature []byte) bool {
+			return true
+		},
+		OnCheckFeatureHasScope: func(scope, feature []byte) bool {
+			return true
+		},
+		OnCheckScopeExists: func(scope []byte) bool {
+			return true
+		},
+		OnCheckScopeHasFeature: func(scope, feature []byte) bool {
+			return true
+		},
 	}
 	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
@@ -70,6 +82,18 @@ func TestCheckFeatureHandler_ValidRequest_UnsetFeature(t *testing.T) {
 				Value: "",
 				Data:  "false",
 			}, nil
+		},
+		OnCheckFeatureExists: func(feature []byte) bool {
+			return true
+		},
+		OnCheckFeatureHasScope: func(scope, feature []byte) bool {
+			return true
+		},
+		OnCheckScopeExists: func(scope []byte) bool {
+			return true
+		},
+		OnCheckScopeHasFeature: func(scope, feature []byte) bool {
+			return true
 		},
 	}
 	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
@@ -103,6 +127,18 @@ func TestSetFeatureHandler_ValidRequest(t *testing.T) {
 				Data:  "true",
 			}, nil
 		},
+		OnCheckFeatureExists: func(feature []byte) bool {
+			return true
+		},
+		OnCheckFeatureHasScope: func(scope, feature []byte) bool {
+			return true
+		},
+		OnCheckScopeExists: func(scope []byte) bool {
+			return true
+		},
+		OnCheckScopeHasFeature: func(scope, feature []byte) bool {
+			return true
+		},
 	}
 	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
 	defer server.Close()
@@ -125,6 +161,18 @@ func TestGetScopesPaginatedWithoutOffset_ValidRequest(t *testing.T) {
 	fdb := store.MockPersistenceStore{
 		OnGetScopesPaginated: func(offset, count int) (store.Serializable, error) {
 			return testScopes, nil
+		},
+		OnCheckFeatureExists: func(feature []byte) bool {
+			return true
+		},
+		OnCheckFeatureHasScope: func(scope, feature []byte) bool {
+			return true
+		},
+		OnCheckScopeExists: func(scope []byte) bool {
+			return true
+		},
+		OnCheckScopeHasFeature: func(scope, feature []byte) bool {
+			return true
 		},
 	}
 	server := httptest.NewServer(App(fdb, negroni.New(negroni.NewRecovery())))
