@@ -1,5 +1,5 @@
 {
-    "memo": "7823374875fc2154089958d5ad841adfbf6250a4a559b077fbbbc712eb45f81c",
+    "memo": "74ea8b541a17854744d4a9075be420db5aaf159b89ab28114554e80f3c9b19c7",
     "projects": [
         {
             "name": "github.com/antonholmquist/jason",
@@ -62,6 +62,14 @@
             "name": "github.com/rafaeljusto/redigomock",
             "version": "v2.0",
             "revision": "ca49a8af34fc0c903a37409317576da14b3f1cbd",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/satori/go.uuid",
+            "version": "v1.1.0",
+            "revision": "879c5887cd475cd7864858769793b2ceb0d44feb",
             "packages": [
                 "."
             ]
