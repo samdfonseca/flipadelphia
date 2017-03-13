@@ -124,46 +124,6 @@ func TestGetScopeFeaturesWithCertainValueSerializes(t *testing.T) {
 	assertEqual(string(actual.Serialize()), target, t)
 }
 
-func TestMergeScopeKeyBothValid(t *testing.T) {
-	actual, err := mergeScopeKey([]byte("user-1"), []byte("feature1"))
-	target := `user-1:feature1`
-	if err != nil {
-		t.Errorf("Error merging scope and key: %s", err)
-	}
-	assertEqual(string(actual), target, t)
-}
-
-func TestMergeScopeKeyInvalidScope(t *testing.T) {
-	_, err := mergeScopeKey([]byte("user:1"), []byte("feature1"))
-	if err == nil {
-		t.Errorf("Invalid scope did not cause error: %s", err)
-	}
-	target := fmt.Errorf("Invalid scope: Can not contain ':' character")
-	assertEqual(err.Error(), target.Error(), t)
-}
-
-func TestMergeScopeKeyInvalidKey(t *testing.T) {
-	_, err := mergeScopeKey([]byte("user-1"), []byte("feature,1"))
-	if err == nil {
-		t.Errorf("Invalid key did not cause error: %s", err)
-	}
-	target := fmt.Errorf("Invalid key character '%s': Valid characters are '%s'", ",", validFeatureKeyCharacters)
-	assertEqual(err.Error(), target.Error(), t)
-}
-
-func TestSplitScopeKeyValidScopeKey(t *testing.T) {
-	actualScope, actualKey, err := splitScopeKey([]byte("user-1:feature1"))
-	assertNil(err, t)
-	assertEqual(string(actualScope), "user-1", t)
-	assertEqual(string(actualKey), "feature1", t)
-}
-
-func TestSplitScopeKeyInvalidMissingColon(t *testing.T) {
-	_, _, err := splitScopeKey([]byte("user-1 feature1"))
-	target := fmt.Errorf(`ScopeKey missing ":" character`)
-	assertErrorEqual(err, target, t)
-}
-
 func TestGetScopesSerializes(t *testing.T) {
 	fdb := MockPersistenceStore{
 		OnGetScopes: func() (Serializable, error) {
@@ -381,6 +341,48 @@ func TestGetFeaturesPaginatedWithOffset(t *testing.T) {
 		}
 		for i := range paginatedFeatures {
 			assertEqual(paginatedFeatures[i], testFeatures[i+5], t)
+		}
+	})
+}
+
+func TestGetAllFeatures(t *testing.T) {
+	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
+		testFeatures := []string{
+			"a",
+			"ab",
+			"amet",
+			"at",
+			"cupiditate",
+			"ea",
+			"eum",
+			"fugiat",
+			"magnam",
+			"maxime",
+			"mollitia",
+			"nihil",
+			"quaerat",
+			"quas",
+			"quidem",
+			"reiciendis",
+			"repudiandae",
+			"velit",
+			"veritatis",
+			"voluptas",
+		}
+		testScopes := []string{"scope1", "scope2", "scope3"}
+		for _, feature := range testFeatures {
+			for _, scope := range testScopes {
+				db.Set([]byte(scope), []byte(feature), []byte("on"))
+			}
+		}
+		allFeatures, _ := db.getAllFeatures()
+		if len(allFeatures) != len(testFeatures) {
+			t.Logf("Target Length: %s", len(testFeatures))
+			t.Logf("Actual Length: %s", len(allFeatures))
+			t.Errorf("Length of allFeatures did not equal %s", len(testFeatures))
+		}
+		for i := range allFeatures {
+			assertEqual(allFeatures[i], testFeatures[i], t)
 		}
 	})
 }
