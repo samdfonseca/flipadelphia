@@ -12,17 +12,14 @@ import (
 )
 
 type FlipadelphiaConfig struct {
-	EnvironmentName              string
-	AuthRequestURL               string `json:"auth_url"`
-	AuthRequestHeader            string `json:"auth_header"`
-	AuthRequestMethod            string `json:"auth_method"`
-	AuthRequestSuccessStatusCode string `json:"auth_success_status_code"`
-	PersistenceStoreType         string `json:"persistence_store_type"`
-	DBFile                       string `json:"db_file"`
-	RedisHost                    string `json:"redis_host"`
-	RedisPassword                string `json:"redis_password"`
-	RedisDB                      int    `json:"redis_db"`
-	ListenOnPort                 string `json:"port"`
+	EnvironmentName      string
+	PersistenceStoreType string `json:"persistence_store_type"`
+	DBFile               string `json:"db_file"`
+	RedisHost            string `json:"redis_host"`
+	RedisPassword        string `json:"redis_password"`
+	RedisDB              int    `json:"redis_db"`
+	LogFile              string `json:"log_file"`
+	ListenOnPort         int    `json:"port"`
 }
 
 var Config FlipadelphiaConfig
@@ -37,6 +34,9 @@ func getStoredFilePath(fileName string) string {
 }
 
 func getFullFilePath(filePath string) string {
+	if filePath == "" {
+		return ""
+	}
 	if path.IsAbs(filePath) {
 		return filePath
 	}
@@ -60,6 +60,17 @@ func parseConfigFile(rawConfigData []byte) (parsedConfig map[string]Flipadelphia
 	return parsedConfig
 }
 
+// Gets the config for a named env from a flipadelphia config file.
+// Config file path can be relative or absolute. If the config file path
+// is absolute, getRuntimeEnv looks for a file at the exact path. If the
+// config file path starts with "./", getRuntimeEnv looks for a file
+// relative to $PWD. Otherwise, getRuntimeEnv looks for a file relative
+// to $HOME/.flipadelphia.
+//
+// Ex:
+//   /etc/flipadelphia/config.json -> /etc/flipadelphia/config.json
+//   ./flipadelphia_config.json -> $PWD/flipadelphia_config.json
+//   config.json -> $HOME/.flipadelphia/config.json
 func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
 	fullConfigFilePath := getFullFilePath(configFilePath)
 	configData := parseConfigFile(readConfigFile(fullConfigFilePath))
@@ -70,6 +81,7 @@ func getRuntimeEnv(configFilePath string, envName string) FlipadelphiaConfig {
 	}
 	runtimeEnv.EnvironmentName = envName
 	runtimeEnv.DBFile = getFullFilePath(runtimeEnv.DBFile)
+	runtimeEnv.LogFile = getFullFilePath(runtimeEnv.LogFile)
 	return runtimeEnv
 }
 

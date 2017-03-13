@@ -232,3 +232,19 @@ func (rdb FlipadelphiaRedisDBV2) GetScopeFeaturesFull(scope []byte) (Serializabl
 func (rdb FlipadelphiaRedisDBV2) Close() error {
 	return rdb.pool.Close()
 }
+
+func (rdb FlipadelphiaRedisDBV2) CheckScopeExists(scope []byte) bool {
+	return true
+}
+
+func (rdb FlipadelphiaRedisDBV2) CheckFeatureExists(feature []byte) bool {
+	return true
+}
+
+func (rdb FlipadelphiaRedisDBV2) CheckScopeHasFeature(scope, feature []byte) bool {
+	return true
+}
+
+func (rdb FlipadelphiaRedisDBV2) CheckFeatureHasScope(scope, feature []byte) bool {
+	return true
+}

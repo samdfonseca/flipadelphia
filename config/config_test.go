@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func checkResult(actual, target string, t *testing.T) {
+func checkResult(actual, target interface{}, t *testing.T) {
 	if actual != target {
 		t.Logf("Target: %s", target)
 		t.Logf("Actual: %s", actual)
@@ -29,7 +29,14 @@ func TestGetFullFilePathRelativePath(t *testing.T) {
 }
 
 func TestGetFullFilePathStoredFilePath(t *testing.T) {
-	homeDir := os.Getenv("HOME")
+	homeDir, ok := os.LookupEnv("HOME")
+	if !ok {
+		err := os.Setenv("HOME", "/tmp")
+		if err != nil {
+			t.Fatal("Unable to set HOME env variable")
+		}
+		defer os.Setenv("HOME", "")
+	}
 	target := fmt.Sprintf("%s/.flipadelphia/config.json", homeDir)
 	actual := getFullFilePath("config.json")
 	checkResult(actual, target, t)
@@ -53,69 +60,117 @@ func TestReadFileContent(t *testing.T) {
 }
 
 func TestParseConfigFile(t *testing.T) {
-	targetAuthUrl := "http://localhost:3005/session"
-	targetAuthHeader := "X-SESSION-TOKEN"
-	targetAuthMethod := "GET"
-	targetAuthSuccessStatusCode := "200"
 	targetPersistenceStoreType := "bolt"
 	targetDBFile := getFullFilePath("test.db")
-	targetRedisHost := "localhost"
-	targetRedisPassword := ""
-	targetPort := "3006"
+	targetLogFile := getFullFilePath("test.log")
+	targetRedisHost := "localhost:6379"
+	targetRedisPassword := "password"
+	targetRedisDB := 0
+	targetPort := 3006
 	content := []byte(fmt.Sprintf(`{"test": {
-    "auth_url": %q,
-    "auth_header": %q,
-    "auth_method": %q,
-    "auth_success_status_code": %q,
 	"persistence_store_type": %q,
     "db_file": %q,
+	"log_file": %q,
 	"redis_host": %q,
 	"redis_password": %q,
-    "port": %q}}`,
-		targetAuthUrl,
-		targetAuthHeader,
-		targetAuthMethod,
-		targetAuthSuccessStatusCode,
+	"redis_db": %d,
+    "port": %d}}`,
 		targetPersistenceStoreType,
 		targetDBFile,
+		targetLogFile,
 		targetRedisHost,
 		targetRedisPassword,
+		targetRedisDB,
 		targetPort))
 	parsedContent := parseConfigFile(content)
 	configData := parsedContent["test"]
-	checkResult(configData.AuthRequestURL, targetAuthUrl, t)
-	checkResult(configData.AuthRequestHeader, targetAuthHeader, t)
-	checkResult(configData.AuthRequestMethod, targetAuthMethod, t)
-	checkResult(configData.AuthRequestSuccessStatusCode, targetAuthSuccessStatusCode, t)
 	checkResult(configData.PersistenceStoreType, targetPersistenceStoreType, t)
 	checkResult(configData.DBFile, targetDBFile, t)
+	checkResult(configData.LogFile, targetLogFile, t)
 	checkResult(configData.RedisHost, targetRedisHost, t)
 	checkResult(configData.RedisPassword, targetRedisPassword, t)
+	checkResult(configData.RedisDB, targetRedisDB, t)
+	checkResult(configData.ListenOnPort, targetPort, t)
+}
+
+func TestParseConfigFileWithoutRedis(t *testing.T) {
+	targetPersistenceStoreType := "bolt"
+	targetDBFile := getFullFilePath("test.db")
+	targetLogFile := getFullFilePath("test.log")
+	targetPort := 3006
+	content := []byte(fmt.Sprintf(`{"test": {
+	"persistence_store_type": %q,
+    "db_file": %q,
+	"log_file": %q,
+    "port": %d}}`,
+		targetPersistenceStoreType,
+		targetDBFile,
+		targetLogFile,
+		targetPort))
+	parsedContent := parseConfigFile(content)
+	configData := parsedContent["test"]
+	checkResult(configData.PersistenceStoreType, targetPersistenceStoreType, t)
+	checkResult(configData.DBFile, targetDBFile, t)
+	checkResult(configData.LogFile, targetLogFile, t)
+	checkResult(configData.RedisHost, "", t)
+	checkResult(configData.RedisPassword, "", t)
+	checkResult(configData.RedisDB, 0, t)
+	checkResult(configData.ListenOnPort, targetPort, t)
+}
+
+func TestParseConfigFileWithoutDBFile(t *testing.T) {
+	targetPersistenceStoreType := "bolt"
+	targetLogFile := getFullFilePath("test.log")
+	targetRedisHost := "localhost:6379"
+	targetRedisPassword := "password"
+	targetRedisDB := 0
+	targetPort := 3006
+	content := []byte(fmt.Sprintf(`{"test": {
+	"persistence_store_type": %q,
+	"log_file": %q,
+    "redis_host": %q,
+    "redis_password": %q,
+    "redis_db": %d,
+    "port": %d}}`,
+		targetPersistenceStoreType,
+		targetLogFile,
+		targetRedisHost,
+		targetRedisPassword,
+		targetRedisDB,
+		targetPort))
+	parsedContent := parseConfigFile(content)
+	configData := parsedContent["test"]
+	checkResult(configData.PersistenceStoreType, targetPersistenceStoreType, t)
+	checkResult(configData.DBFile, "", t)
+	checkResult(configData.LogFile, targetLogFile, t)
+	checkResult(configData.RedisHost, targetRedisHost, t)
+	checkResult(configData.RedisPassword, targetRedisPassword, t)
+	checkResult(configData.RedisDB, targetRedisDB, t)
 	checkResult(configData.ListenOnPort, targetPort, t)
 }
 
 func TestGetRuntimeEnv(t *testing.T) {
-	targetAuthUrl := "http://localhost:3005/session"
-	targetAuthHeader := "X-SESSION-TOKEN"
-	targetAuthMethod := "GET"
-	targetAuthSuccessStatusCode := "200"
 	targetPersistenceStoreType := "bolt"
 	targetDBFile := getFullFilePath("test.db")
-	targetPort := "3006"
+	targetLogFile := getFullFilePath("test.log")
+	targetRedisHost := "localhost:6379"
+	targetRedisPassword := "password"
+	targetRedisDB := 0
+	targetPort := 3006
 	content := []byte(fmt.Sprintf(`{"test": {
-    "auth_url": %q,
-    "auth_header": %q,
-    "auth_method": %q,
-    "auth_success_status_code": %q,
 	"persistence_store_type": %q,
     "db_file": %q,
-    "port": %q}}`,
-		targetAuthUrl,
-		targetAuthHeader,
-		targetAuthMethod,
-		targetAuthSuccessStatusCode,
+	"log_file": %q,
+	"redis_host": %q,
+	"redis_password": %q,
+	"redis_db": %d,
+    "port": %d}}`,
 		targetPersistenceStoreType,
 		targetDBFile,
+		targetLogFile,
+		targetRedisHost,
+		targetRedisPassword,
+		targetRedisDB,
 		targetPort))
 	tmpfile, err := ioutil.TempFile("", "flipadelphia")
 	if err != nil {
@@ -129,10 +184,11 @@ func TestGetRuntimeEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	configData := getRuntimeEnv(tmpfile.Name(), "test")
-	checkResult(configData.AuthRequestURL, targetAuthUrl, t)
-	checkResult(configData.AuthRequestHeader, targetAuthHeader, t)
-	checkResult(configData.AuthRequestMethod, targetAuthMethod, t)
-	checkResult(configData.AuthRequestSuccessStatusCode, targetAuthSuccessStatusCode, t)
+	checkResult(configData.PersistenceStoreType, targetPersistenceStoreType, t)
 	checkResult(configData.DBFile, targetDBFile, t)
+	checkResult(configData.LogFile, targetLogFile, t)
+	checkResult(configData.RedisHost, targetRedisHost, t)
+	checkResult(configData.RedisPassword, targetRedisPassword, t)
+	checkResult(configData.RedisDB, targetRedisDB, t)
 	checkResult(configData.ListenOnPort, targetPort, t)
 }

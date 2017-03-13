@@ -177,7 +177,8 @@ func TestGetScopesSerializes(t *testing.T) {
 
 func TestGetScopesPaginatedWithOffset(t *testing.T) {
 	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
-		testScopes := []string{"a",
+		testScopes := []string{
+			"a",
 			"ab",
 			"amet",
 			"at",
@@ -218,7 +219,8 @@ func TestGetScopesPaginatedWithOffset(t *testing.T) {
 
 func TestGetScopesPaginatedWithoutOffset(t *testing.T) {
 	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
-		testScopes := []string{"a",
+		testScopes := []string{
+			"a",
 			"ab",
 			"amet",
 			"at",
@@ -259,7 +261,8 @@ func TestGetScopesPaginatedWithoutOffset(t *testing.T) {
 
 func TestGetScopesPaginatedWithoutOffsetCountGreaterThanAvailable(t *testing.T) {
 	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
-		testScopes := []string{"a",
+		testScopes := []string{
+			"a",
 			"ab",
 			"amet",
 			"at",
@@ -300,7 +303,8 @@ func TestGetScopesPaginatedWithoutOffsetCountGreaterThanAvailable(t *testing.T) 
 
 func TestGetScopesPaginatedWithOffsetCountGreaterThanAvailable(t *testing.T) {
 	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
-		testScopes := []string{"a",
+		testScopes := []string{
+			"a",
 			"ab",
 			"amet",
 			"at",
@@ -335,6 +339,48 @@ func TestGetScopesPaginatedWithOffsetCountGreaterThanAvailable(t *testing.T) {
 		}
 		for i := range paginatedScopes {
 			assertEqual(paginatedScopes[i], testScopes[i+10], t)
+		}
+	})
+}
+
+func TestGetFeaturesPaginatedWithOffset(t *testing.T) {
+	RunTestWithTempDB(t, func(db FlipadelphiaBoltDB, t *testing.T) {
+		testFeatures := []string{
+			"a",
+			"ab",
+			"amet",
+			"at",
+			"cupiditate",
+			"ea",
+			"eum",
+			"fugiat",
+			"magnam",
+			"maxime",
+			"mollitia",
+			"nihil",
+			"quaerat",
+			"quas",
+			"quidem",
+			"reiciendis",
+			"repudiandae",
+			"velit",
+			"veritatis",
+			"voluptas",
+		}
+		testScopes := []string{"scope1", "scope2", "scope3"}
+		for _, feature := range testFeatures {
+			for _, scope := range testScopes {
+				db.Set([]byte(scope), []byte(feature), []byte("on"))
+			}
+		}
+		paginatedFeatures, _ := db.getFeaturesPaginated(5, 10)
+		if len(paginatedFeatures) != 10 {
+			t.Logf("Target Length: 10")
+			t.Logf("Actual Length: %s", len(paginatedFeatures))
+			t.Errorf("Length of paginatedFeatures did not equal 10")
+		}
+		for i := range paginatedFeatures {
+			assertEqual(paginatedFeatures[i], testFeatures[i+5], t)
 		}
 	})
 }
